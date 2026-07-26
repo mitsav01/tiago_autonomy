@@ -40,22 +40,72 @@ def generate_launch_description():
         executable = 'ros2_control_node',
         parameters = [
             {'robot_description': robot_description},
-            controller_config
+            controller_config,
         ],
     )
 
     joint_state_broadcaster_spawner = Node(
-            package='controller_manager',
-            executable='spawner',
-            arguments=[
-                'joint_state_broadcaster'
-            ],
-            output='both'
-        )
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'joint_state_broadcaster'
+        ],
+        output='both'
+    )
+
+    left_arm_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'arm_left_controller'
+        ],
+        output='both'
+    )
+
+    right_arm_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'arm_right_controller'
+        ],
+        output='both'
+    )
+
+    torso_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'torso_controller'
+        ],
+        output='both'
+    )
+
+    left_gripper_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'left_gripper_controller'
+        ],
+        output='both'
+    )
+
+    right_gripper_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'right_gripper_controller'
+        ],
+        output='both'
+    )
 
     return LaunchDescription([
         rsp_node,
         rviz_node,
+        control_node,
         joint_state_broadcaster_spawner,
-        control_node
+        left_arm_controller_spawner,
+        right_arm_controller_spawner,
+        torso_controller_spawner,
+        left_gripper_controller_spawner,
+        right_gripper_controller_spawner,
     ])
