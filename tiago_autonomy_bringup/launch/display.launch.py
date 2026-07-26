@@ -84,7 +84,7 @@ def generate_launch_description():
         package='controller_manager',
         executable='spawner',
         arguments=[
-            'left_gripper_controller'
+            'left_robotiq_gripper_controller'
         ],
         output='both'
     )
@@ -93,7 +93,7 @@ def generate_launch_description():
         package='controller_manager',
         executable='spawner',
         arguments=[
-            'right_gripper_controller'
+            'right_robotiq_gripper_controller'
         ],
         output='both'
     )

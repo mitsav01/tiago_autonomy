@@ -14,11 +14,17 @@ controller_manager:
     arm_right_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
-    left_gripper_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+    left_robotiq_gripper_controller:
+      type: parallel_gripper_action_controller/GripperActionController
 
-    right_gripper_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+    right_robotiq_gripper_controller:
+      type: parallel_gripper_action_controller/GripperActionController
+
+    left_robotiq_activation_controller:
+      type: robotiq_controllers/RobotiqActivationController
+
+    right_robotiq_activation_controller:
+      type: robotiq_controllers/RobotiqActivationController
 
 arm_left_controller:
   ros__parameters:
@@ -115,31 +121,28 @@ arm_right_controller:
       arm_right_6_joint: {goal: 0.02}
       arm_right_7_joint: {goal: 0.02}
 
-
-left_gripper_controller:
+left_robotiq_gripper_controller:
   ros__parameters:
-    joints:
-      - gripper_left_finger_joint
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
+    joint: gripper_left_finger_joint
+    command_interface: position
+    state_interfaces: ["position", "velocity"]
+    allow_stalling: true
+    stall_timeout: 0.05
+    goal_tolerance: 0.02
 
-    constraints:
-      goal_time: 0.6
-      stopped_velocity_tolerance: 5.0
-      gripper_left_finger_joint: {goal: 0.02}
-
-right_gripper_controller:
+left_robotiq_activation_controller:
   ros__parameters:
-    joints:
-      - gripper_right_finger_joint
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
-      
-    constraints:
-      goal_time: 0.6
-      stopped_velocity_tolerance: 5.0
-      gripper_right_finger_joint: {goal: 0.02} 
+    default: true    
+
+right_robotiq_gripper_controller:
+  ros__parameters:
+    joint: gripper_right_finger_joint
+    command_interface: position
+    state_interfaces: ["position", "velocity"]
+    allow_stalling: true
+    stall_timeout: 0.05
+    goal_tolerance: 0.02
+
+right_robotiq_activation_controller:
+  ros__parameters:
+    default: true  
