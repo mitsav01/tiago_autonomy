@@ -1,7 +1,6 @@
 import os
 
 from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -89,7 +88,10 @@ def generate_launch_description():
             "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
             "/base_imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
-            "/head_front_camera@sensor_msgs/msg/Image[gz.msgs.Image",
+            "/head_front_camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
+            "/head_front_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+            "/head_front_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image",
+            "/head_front_camera/depth_camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
         ],
         parameters=[{"use_sim_time": True}],
         output="screen",

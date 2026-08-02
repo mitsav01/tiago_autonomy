@@ -53,9 +53,43 @@
   </joint>
   <gazebo reference="base_imu_link">
     <sensor name="base_imu_sensor" type="imu">
-      <always_on>1</always_on>
-      <update_rate>100.0</update_rate>
-      <topic>base_imu</topic>
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <topic>base_imu</topic>
+        <plugin
+            filename="gz-sim-imu-system"
+            name="gz::sim::systems::Imu">
+        </plugin>
+        <imu>
+            <angular_velocity>
+                <x>
+                    <noise type="gaussian">
+                        <mean>0.0</mean>
+                        <stddev>0.001</stddev>
+                    </noise>
+                </x>
+                <y>
+                    <noise type="gaussian">
+                        <mean>0.0</mean>
+                        <stddev>0.001</stddev>
+                    </noise>
+                </y>
+                <z>
+                    <noise type="gaussian">
+                        <mean>0.0</mean>
+                        <stddev>0.001</stddev>
+                    </noise>
+                </z>
+            </angular_velocity>
+            <linear_acceleration>
+                <x>
+                    <noise type="gaussian">
+                        <mean>0.0</mean>
+                        <stddev>0.01</stddev>
+                    </noise>
+                </x>
+            </linear_acceleration>
+        </imu>
     </sensor>
   </gazebo>
 
@@ -2118,6 +2152,12 @@
           <far>8.0</far>
         </clip>
       </camera>
+      <depth_camera>
+        <clip>
+          <near>0.3</near>
+          <far>8.0</far>
+        </clip>
+      </depth_camera>
     </sensor>
   </gazebo>
 
