@@ -45,9 +45,9 @@ def generate_launch_description():
         arguments=["-d", rviz_config],
     )
 
-    joint_state_publisher_node = Node(
-        package="joint_state_publisher",
-        executable="joint_state_publisher",
+    joint_state_publisher_gui_node = Node(
+        package="joint_state_publisher_gui",
+        executable="joint_state_publisher_gui",
         output="both",
     )
 
@@ -55,6 +55,6 @@ def generate_launch_description():
         [
             rsp_node,
             rviz_node,
-            joint_state_publisher_node,
+            joint_state_publisher_gui_node,
         ]
     )
