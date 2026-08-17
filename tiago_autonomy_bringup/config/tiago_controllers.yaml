@@ -102,11 +102,14 @@ mobile_base_controller:
     # Velocity commands timeout [s]
     cmd_vel_timeout: 0.25
 
+    #Odom frame_d
+    odom_frame_id: "odom"
+
     # Base frame_id
-    base_frame_id: base_footprint
+    base_frame_id: "base_footprint"
 
     # odom tf will be published by direct laser odometry
-    enable_odom_tf: true
+    enable_odom_tf: false
 
     # Publish limited velocity
     publish_limited_velocity: true

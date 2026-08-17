@@ -43,6 +43,8 @@ def generate_launch_description():
 
     world_file = os.path.join(tiago_bringup_pkg, "urdf", "apartment_gazebo.sdf")
     robot_file = os.path.join(tiago_bringup_pkg, "urdf", "tiago_autonomy.urdf")
+    rviz_config = os.path.join(tiago_bringup_pkg, "rviz2", "rviz_config.rviz")
+
     robot_description = Command([FindExecutable(name="xacro"), " ", robot_file])
 
     gz_sim_launch = IncludeLaunchDescription(
@@ -114,7 +116,15 @@ def generate_launch_description():
             "--controller-manager-timeout",
             "60",
         ],
+        parameters=[{"use_sim_time": True}],
         output="screen",
+    )
+
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        output="both",
+        arguments=["-d", rviz_config],
     )
 
     return LaunchDescription(
@@ -125,5 +135,6 @@ def generate_launch_description():
             spawn_robot,
             gz_bridge,
             spawn_controllers,
+            rviz_node
         ]
     )
