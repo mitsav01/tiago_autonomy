@@ -11,7 +11,7 @@ ament_target_dependencies(
   tiago_navigation
 )
 
-install(DIRECTORY launch config
+install(DIRECTORY launch config maps
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()

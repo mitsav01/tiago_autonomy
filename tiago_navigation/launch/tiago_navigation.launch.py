@@ -11,24 +11,30 @@ from launch.actions import DeclareLaunchArgument
 
 def generate_launch_description():
 
-    default_ekf_config_file = os.path.join(
-        get_package_share_directory("tiago_navigation"),
+    tiago_nav_pkg = get_package_share_directory("tiago_navigation")
+    nav2_pkg = get_package_share_directory("nav2_bringup")
+
+    ekf_params_file = os.path.join(
+        tiago_nav_pkg,
         "config",
         "ekf.yaml",
     )
 
-    ekf_config_file = LaunchConfiguration('ekf_config_file')
-
-    declare_ekf_config_cmd = DeclareLaunchArgument(
-        name='ekf_config_file',
-        default_value=default_ekf_config_file,
-        description='Full path to ekf config file to load'
+    map_yaml_file = os.path.join(
+        tiago_nav_pkg,
+        "maps",
+        "apartment_map.yaml",
     )
 
-    declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='false',
-        description='Use simulation (TurtleBot) clock if true'
+    nav2_launch_file_dir = os.path.join(
+        nav2_pkg,
+        "launch", "bringup_launch.py"
+    )
+
+    nav2_params_file = os.path.join(
+        tiago_nav_pkg,
+        "config",
+        "nav2_tiago_params.yaml",
     )
 
     ekf_node = Node(
@@ -36,12 +42,28 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_filter_node',
         output='screen',
-        parameters=[ekf_config_file, 
-                    {'use_sim_time': True}]
+        parameters=[ekf_params_file,
+                    {'use_sim_time': True}
+                    ]
+    )
+
+    nav2_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(nav2_launch_file_dir),
+        launch_arguments={
+            'slam': 'True',
+            'map': map_yaml_file,
+            'use_sim_time': 'True',
+            'params_file': nav2_params_file,
+            'autostart': 'True',
+            'use_respawn': 'True',
+            'use_composition': 'False',
+        }.items(),
+        # remappings=[
+        #     ('/cmd_vel','/mobile_base_controller/cmd_vel')
+        # ]
     )
 
     return LaunchDescription([
-        declare_ekf_config_cmd,
-        declare_use_sim_time_cmd,
-        ekf_node
+        ekf_node,
+        nav2_node,
     ])
