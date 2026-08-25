@@ -89,7 +89,7 @@ def generate_launch_description():
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
             "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
-            "/base_imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
+            "/base_imu@sensor_msgs/msg/Imu[gz.msgs.Imu",
             "/head_front_camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
             "/head_front_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
             "/head_front_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image",
@@ -125,6 +125,7 @@ def generate_launch_description():
         executable="rviz2",
         output="both",
         arguments=["-d", rviz_config],
+        parameters=[{"use_sim_time": True}],
     )
 
     return LaunchDescription(
@@ -135,6 +136,6 @@ def generate_launch_description():
             spawn_robot,
             gz_bridge,
             spawn_controllers,
-            rviz_node
+            rviz_node,
         ]
     )
