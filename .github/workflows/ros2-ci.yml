@@ -63,6 +63,10 @@ jobs:
       image: rostooling/setup-ros-docker:ubuntu-noble-latest
 
     steps:
+      
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Build and test ROS 2 packages
         id: ros_ci
         uses: ros-tooling/action-ros-ci@v0.4
