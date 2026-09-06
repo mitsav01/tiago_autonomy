@@ -34,16 +34,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           apt-get update
+
           apt-get install -y --no-install-recommends \
-            python3-black \
+            python3-pip \
             ros-jazzy-ament-clang-format
+
+          python3 -m pip install \
+            --break-system-packages \
+            black
+
           rm -rf /var/lib/apt/lists/*
 
       - name: Check Python and C/C++ formatting
         shell: bash
         run: |
           set -euo pipefail
+
           chmod +x tools/format_code.sh
           ./tools/format_code.sh --check
 
