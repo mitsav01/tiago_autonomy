@@ -63,7 +63,6 @@ jobs:
       image: rostooling/setup-ros-docker:ubuntu-noble-latest
 
     steps:
-      
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -75,7 +74,7 @@ jobs:
             tiago_autonomy_bringup
             tiago_navigation
           target-ros2-distro: jazzy
-          vcs-repo-file-url: ${{ github.workspace }}/.github/dependencies.repos
+          vcs-repo-file-url: .github/dependencies.repos
           coverage-result: false
 
       - name: Upload colcon logs
