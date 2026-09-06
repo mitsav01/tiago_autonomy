@@ -8,6 +8,9 @@ ROS_DISTRO_NAME="${ROS_DISTRO:-jazzy}"
 
 # Source ROS 2 environment
 
+# Initialize ROS environment variables that may be undefined
+export AMENT_TRACE_SETUP_FILES=0
+
 if [[ -f "/opt/ros/${ROS_DISTRO_NAME}/setup.bash" ]]; then
   # shellcheck disable=SC1090
   source "/opt/ros/${ROS_DISTRO_NAME}/setup.bash"
