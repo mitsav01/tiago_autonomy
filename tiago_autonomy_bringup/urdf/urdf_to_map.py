@@ -11,7 +11,6 @@ from skimage.draw import line as draw_line
 from skimage.draw import polygon as draw_polygon
 from yourdfpy import URDF
 
-
 FREE = np.uint8(254)
 OCCUPIED = np.uint8(0)
 
