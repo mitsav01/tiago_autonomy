@@ -5,13 +5,11 @@ project(tiago_navigation)
 find_package(ament_cmake REQUIRED)
 # find_package(sensor_msg REQUIRED)
 
-add_executable(tiago_navigation src/tiago_navigation.cpp)
-
-ament_target_dependencies(
-  tiago_navigation
-)
-
 install(DIRECTORY launch config maps
   DESTINATION share/${PROJECT_NAME})
 
+install(PROGRAMS
+scripts/dock_pose_publisher.py
+DESTINATION lib/${PROJECT_NAME}
+)
 ament_package()

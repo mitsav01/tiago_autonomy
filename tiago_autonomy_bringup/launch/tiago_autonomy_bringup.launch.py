@@ -2,10 +2,16 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import (
+    IncludeLaunchDescription,
+    RegisterEventHandler,
+    SetEnvironmentVariable,
+    TimerAction,
+)
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node
 from launch.substitutions import Command, FindExecutable
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -23,7 +29,6 @@ def generate_launch_description():
     ]
 
     gz_paths = []
-
     for pkg in required_packages:
         try:
             path = get_package_share_directory(pkg)
@@ -33,7 +38,6 @@ def generate_launch_description():
             pass
 
     old_path = os.environ.get("GZ_SIM_RESOURCE_PATH", "")
-
     if old_path:
         gz_paths.append(old_path)
 
@@ -82,28 +86,64 @@ def generate_launch_description():
         output="screen",
     )
 
+    # gz_bridge = Node(
+    #     package="ros_gz_bridge",
+    #     executable="parameter_bridge",
+    #     arguments=[
+    #         "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+    #         "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+    #         "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
+    #         "/base_imu@sensor_msgs/msg/Imu[gz.msgs.Imu",
+    #         "/head_front_camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
+    #         "/head_front_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+    #         "/head_front_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image",
+    #         "/head_front_camera/depth_camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+    #     ],
+    #     parameters=[{"use_sim_time": True}],
+    #     output="screen",
+    # )
     gz_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
+        name="ros_gz_bridge",
         arguments=[
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
             "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
-            "/base_imu@sensor_msgs/msg/Imu[gz.msgs.Imu",
+
+            # Capitalization is important
+            "/base_imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
+
             "/head_front_camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
             "/head_front_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+
             "/head_front_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image",
             "/head_front_camera/depth_camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+        ],
+        parameters=[
+            {"use_sim_time": True},
+        ],
+        output="screen",
+    )
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+            "--controller-manager-timeout",
+            "120",
         ],
         parameters=[{"use_sim_time": True}],
         output="screen",
     )
 
-    spawn_controllers = Node(
+    # 2. Base & Body Trajectory Controllers
+    spawn_motion_controllers = Node(
         package="controller_manager",
         executable="spawner",
         arguments=[
-            "joint_state_broadcaster",
             "mobile_base_controller",
             "torso_controller",
             "head_controller",
@@ -114,10 +154,29 @@ def generate_launch_description():
             "--controller-manager",
             "/controller_manager",
             "--controller-manager-timeout",
-            "60",
+            "120",
         ],
         parameters=[{"use_sim_time": True}],
         output="screen",
+    )
+
+    delay_joint_state_broadcaster = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=spawn_robot,
+            on_exit=[
+                TimerAction(
+                    period=4.0,
+                    actions=[joint_state_broadcaster_spawner],
+                )
+            ],
+        )
+    )
+
+    delay_motion_controllers = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[spawn_motion_controllers],
+        )
     )
 
     rviz_node = Node(
@@ -135,7 +194,8 @@ def generate_launch_description():
             robot_state_publisher,
             spawn_robot,
             gz_bridge,
-            spawn_controllers,
+            delay_joint_state_broadcaster,
+            delay_motion_controllers,
             rviz_node,
         ]
     )

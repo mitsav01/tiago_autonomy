@@ -1,7 +1,8 @@
 controller_manager:
   ros__parameters:
     update_rate: 100
-
+    switch_controller_timeout: 30.0
+    
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
@@ -25,12 +26,6 @@ controller_manager:
 
     right_robotiq_gripper_controller:
       type: parallel_gripper_action_controller/GripperActionController
-
-    left_robotiq_activation_controller:
-      type: robotiq_controllers/RobotiqActivationController
-
-    right_robotiq_activation_controller:
-      type: robotiq_controllers/RobotiqActivationController
 
 head_controller:
   ros__parameters:
@@ -83,11 +78,13 @@ torso_controller:
 
 mobile_base_controller:
   ros__parameters:
-    use_stamped_vel: False
-    left_wheel_names  : ['wheel_left_joint']
-    right_wheel_names : ['wheel_right_joint']
+    use_stamped_vel: true
+    publish_limited_velocity: true
+    publish_odom_tf: true
 
-    # In ROS1 these physical properties were parsed from the URDF
+    left_wheel_names: ['wheel_left_joint']
+    right_wheel_names: ['wheel_right_joint']
+
     wheel_radius: 0.0985
     wheel_separation: 0.4044
 
@@ -96,39 +93,27 @@ mobile_base_controller:
     right_wheel_radius_multiplier: 1.0
     
     publish_rate: 50.0
-    pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
+    pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
 
-    # Velocity commands timeout [s]
-    cmd_vel_timeout: 0.25
+    cmd_vel_timeout: 2.5
+    odom_frame_id: odom
+    base_frame_id: base_footprint
+    # enable_odom_tf: true
 
-    #Odom frame_d
-    odom_frame_id: "odom"
-
-    # Base frame_id
-    base_frame_id: "base_footprint"
-
-    # odom tf will be published by direct laser odometry
-    enable_odom_tf: false
-
-    # Publish limited velocity
-    publish_limited_velocity: true
-
-    # Velocity and acceleration limits
-    # Whenever a min_* is unspecified, default to -max_*
     linear:
       x:
-        has_velocity_limits    : true
-        max_velocity           :  1.0 # m/s
-        min_velocity           : -0.2 # m/s
+        has_velocity_limits: true
+        max_velocity: 1.0
+        min_velocity: -0.5
         has_acceleration_limits: true
-        max_acceleration       :  0.5 # m/s^2
+        max_acceleration: 1.5
     angular:
       z:
-        has_velocity_limits    : true
-        max_velocity           : 1.05 # 60.0º
+        has_velocity_limits: true
+        max_velocity: 1.5
         has_acceleration_limits: true
-        max_acceleration       : 1.05 # 60.0º
+        max_acceleration: 2.5
 
 arm_left_controller:
   ros__parameters:
@@ -212,11 +197,7 @@ left_robotiq_gripper_controller:
     allow_stalling: true
     stall_timeout: 0.05
     goal_tolerance: 0.02
-
-left_robotiq_activation_controller:
-  ros__parameters:
-    default: true    
-
+ 
 right_robotiq_gripper_controller:
   ros__parameters:
     joint: gripper_right_finger_joint
@@ -226,6 +207,3 @@ right_robotiq_gripper_controller:
     stall_timeout: 0.05
     goal_tolerance: 0.02
 
-right_robotiq_activation_controller:
-  ros__parameters:
-    default: true  

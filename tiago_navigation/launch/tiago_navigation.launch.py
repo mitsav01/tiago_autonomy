@@ -26,6 +26,12 @@ def generate_launch_description():
         "apartment_map.yaml",
     )
 
+    apriltag_dock_params_file = os.path.join(
+        tiago_nav_pkg,
+        "config",
+        "apriltag_dock.yaml",
+    )
+
     nav2_launch_file_dir = os.path.join(
         nav2_pkg,
         "launch", "bringup_launch.py"
@@ -50,7 +56,7 @@ def generate_launch_description():
     nav2_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(nav2_launch_file_dir),
         launch_arguments={
-            'slam': 'True',
+            'slam': 'False',
             'map': map_yaml_file,
             'use_sim_time': 'True',
             'params_file': nav2_params_file,
@@ -63,7 +69,33 @@ def generate_launch_description():
         # ]
     )
 
+    apriltag_dock_node = Node(
+        package='apriltag_ros',
+        executable='apriltag_node',
+        name='apriltag_dock_node',
+        output='screen',
+        parameters=[apriltag_dock_params_file,
+                    {'use_sim_time': True}
+                    ],
+        remappings=[
+            ("image_rect", "/head_front_camera/image"),
+            ("camera_info", "/head_front_camera/camera_info"),
+        ]
+    )
+
+    dock_pose_publisher_node = Node(
+    package="tiago_navigation",
+    executable="dock_pose_publisher.py",
+    name="dock_pose_publisher",
+    output="screen",
+    parameters=[
+        {"use_sim_time": True},
+    ],
+)
+    
     return LaunchDescription([
         ekf_node,
         nav2_node,
+        apriltag_dock_node,
+        dock_pose_publisher_node,
     ])

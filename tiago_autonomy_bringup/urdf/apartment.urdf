@@ -326,6 +326,73 @@
       </geometry>
     </collision>
   </link>
+  
+  <!-- DOCKING STATION                                                  -->
+
+  <link name="docking_station_link">
+
+    <visual>
+      <origin xyz="0 0 0.125" rpy="0 0 0"/>
+
+      <geometry>
+        <box size="0.12 0.40 0.25"/>
+      </geometry>
+
+      <material name="dock_dark">
+        <color rgba="0.12 0.12 0.12 1.0"/>
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0.125" rpy="0 0 0"/>
+
+      <geometry>
+        <box size="0.12 0.40 0.25"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+
+  <joint name="docking_station_joint" type="fixed">
+
+    <parent link="apartment_root"/>
+    <child link="docking_station_link"/>
+
+    <!-- Dock pose in apartment/map frame -->
+    <origin xyz="8.17 4.85 0.0"
+            rpy="0 0 1.5708"/>
+
+  </joint>
+
+  <!-- APRILTAG -->
+
+  <link name="dock_apriltag_link">
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+
+      <geometry>
+        <box size="0.002 0.18 0.18"/>
+      </geometry>
+      <material name="apriltag_material">
+        <texture filename="package://iai_apartment/meshes/apriltag/tag36h11-0.png"/>
+      </material>
+
+    </visual>
+
+  </link>
+
+
+  <joint name="dock_apriltag_joint" type="fixed">
+
+    <parent link="apartment_root"/>
+    <child link="dock_apriltag_link"/>
+
+    <origin xyz="8.17 4.93 0.70"
+            rpy="0 0 1.5708"/>
+
+  </joint>
 
   <!-- Living Room Furniture -->
   <joint name="armchair_joint" type="fixed">

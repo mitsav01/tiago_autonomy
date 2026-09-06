@@ -13,9 +13,9 @@
     <plugin filename="gz-sim-user-commands-system" name="gz::sim::v8::systems::UserCommands"/>
     <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::v8::systems::SceneBroadcaster"/>
     
-    <plugin filename="gz-sim-sensors-system" name="gz::sim::v8::systems::Sensors">
+    <!-- <plugin filename="gz-sim-sensors-system" name="gz::sim::v8::systems::Sensors">
       <render_engine>ogre2</render_engine>
-    </plugin>
+    </plugin> -->
 
     <!-- Scene Lighting Setup -->
     <scene>
@@ -95,6 +95,17 @@
         <collision name="wall4_collision">
           <pose>18.919 2.532 1.53 0 1.5708 0</pose>
           <geometry><box><size>3.05 4.808 0.003</size></box></geometry>
+        </collision>
+
+        <!-- ==================== DOCKING STATION COLLISION ==================== -->
+        <collision name="docking_station_collision">
+          <!-- Canonical dock pose: x=8.17, y=4.85, yaw=+90 deg -->
+          <pose>8.17 4.85 0.125 0 0 1.5708</pose>
+          <geometry>
+            <box>
+              <size>0.12 0.40 0.25</size>
+            </box>
+          </geometry>
         </collision>
 
         <!-- ==================== LIVING AREA COLLISIONS ==================== -->
@@ -198,6 +209,49 @@
           <pose>2.552 3.362 0.884 0 0 3.14159</pose>
           <geometry><box><size>0.50 0.60 0.20</size></box></geometry>
         </collision>
+
+        <!-- ==================== DOCKING STATION VISUALS ==================== -->
+        <visual name="docking_station_visual">
+          <pose>8.17 4.85 0.125 0 0 1.5708</pose>
+          <geometry>
+            <box>
+              <size>0.12 0.40 0.25</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.12 0.12 1.0</ambient>
+            <diffuse>0.12 0.12 0.12 1.0</diffuse>
+            <specular>0.10 0.10 0.10 1.0</specular>
+            <pbr>
+              <metal>
+                <roughness>0.75</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <visual name="dock_apriltag_visual">
+          <pose>8.17 4.93 0.70 0 0 -1.5708</pose>
+          
+          <geometry>
+            <box>
+              <size>0.001 0.18 0.18</size>
+            </box>
+          </geometry>
+
+          <material>
+            <ambient>1.0 1.0 1.0 1.0</ambient>
+            <diffuse>1.0 1.0 1.0 1.0</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>package://iai_apartment/meshes/apriltag/tag36h11-0.png</albedo_map>
+                <roughness>1.0</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
 
         <!-- ==================== ENVIRONMENT VISUALS ==================== -->
         <visual name="walls_visual">
