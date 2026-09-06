@@ -9,7 +9,25 @@
 ![Status](https://img.shields.io/badge/Project-Active%20Development-yellow)
 
 ---
+## 🎥 Visual Docking Demo
 
+<p align="center">
+  <img src="media/forward_docking.gif"
+       alt="TIAGo AprilTag Visual Docking Demo"
+       width="850"/>
+</p>
+
+<p align="center">
+  <strong>AprilTag-refined autonomous docking using ROS 2 Nav2 + OpenNav Docking.</strong>
+</p>
+
+<p align="center">
+  <a href="media/forward_docking.webm">▶ Watch the full docking video</a>
+</p>
+
+> The robot first navigates to a coarse staging pose, detects the docking station using the head RGB-D camera, refines the target using an AprilTag pose estimate, and performs the final approach with OpenNav's closed-loop docking controller.
+
+---
 ## Overview
 
 This project develops a full autonomy stack for a **TIAGo dual-arm mobile manipulator** in a custom indoor environment.
