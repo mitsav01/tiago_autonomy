@@ -7,12 +7,10 @@ cd "${REPO_ROOT}"
 ROS_DISTRO_NAME="${ROS_DISTRO:-jazzy}"
 
 # Source ROS 2 environment
-
-# Initialize ROS environment variables that may be undefined
-export AMENT_TRACE_SETUP_FILES=0
+# ROS checks '[ -n "$AMENT_TRACE_SETUP_FILES" ]', so it must be unset rather than set to 0.
+unset AMENT_TRACE_SETUP_FILES
 
 if [[ -f "/opt/ros/${ROS_DISTRO_NAME}/setup.bash" ]]; then
-  export AMENT_TRACE_SETUP_FILES=0
   set +u
   # shellcheck disable=SC1090
   source "/opt/ros/${ROS_DISTRO_NAME}/setup.bash"
