@@ -51,9 +51,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
-          chmod +x tools/format_code.sh
-          ./tools/format_code.sh --check
+          chmod +x .github/tools/format_code.sh
+          ./.github/tools/format_code.sh --check
 
   build-and-test:
     name: Build & Test
