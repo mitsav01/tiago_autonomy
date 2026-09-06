@@ -7,7 +7,6 @@ cd "${REPO_ROOT}"
 ROS_DISTRO_NAME="${ROS_DISTRO:-jazzy}"
 
 # Source ROS 2 environment
-# ROS checks '[ -n "$AMENT_TRACE_SETUP_FILES" ]', so it must be unset rather than set to 0.
 unset AMENT_TRACE_SETUP_FILES
 
 if [[ -f "/opt/ros/${ROS_DISTRO_NAME}/setup.bash" ]]; then
@@ -106,6 +105,11 @@ echo "Repository : ${REPO_ROOT}"
 echo "ROS distro : ${ROS_DISTRO_NAME}"
 echo "Mode       : ${MODE}"
 
+# Find C/C++ files across target packages
+has_cpp_files() {
+  find "${PACKAGE_PATHS[@]}" -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.c" -o -name "*.h" -o -name "*.cc" -o -name "*.hh" \) -print -quit | grep -q .
+}
+
 # Formatting
 
 if [[ "${MODE}" == "check" ]]; then
@@ -117,7 +121,11 @@ if [[ "${MODE}" == "check" ]]; then
   echo
   echo "==> Checking C/C++ formatting with ament_clang_format"
 
-  ament_clang_format "${PACKAGE_PATHS[@]}"
+  if has_cpp_files; then
+    ament_clang_format "${PACKAGE_PATHS[@]}"
+  else
+    echo "No C/C++ files found. Skipping ament_clang_format."
+  fi
 
   echo
   echo "Formatting check passed."
@@ -130,7 +138,11 @@ else
   echo
   echo "==> Formatting C/C++ with ament_clang_format"
 
-  ament_clang_format --reformat "${PACKAGE_PATHS[@]}"
+  if has_cpp_files; then
+    ament_clang_format --reformat "${PACKAGE_PATHS[@]}"
+  else
+    echo "No C/C++ files found. Skipping ament_clang_format."
+  fi
 
   echo
   echo "Formatting complete."
