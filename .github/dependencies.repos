@@ -1,0 +1,5 @@
+repositories:
+  iai_apartment:
+    type: git
+    url: https://github.com/mitsav01/iai_maps.git
+    version: jazzy-apriltag
