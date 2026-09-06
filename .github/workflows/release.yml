@@ -1,0 +1,114 @@
+name: ROS 2 Jazzy Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+
+    container:
+      image: rostooling/setup-ros-docker:ubuntu-noble-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install formatters
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            python3-black \
+            ros-jazzy-ament-clang-format
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Check Python and C/C++ formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x tools/format_code.sh
+          ./tools/format_code.sh --check
+
+  validate:
+    name: Build & Test Release
+    needs: format-check
+    runs-on: ubuntu-latest
+
+    container:
+      image: rostooling/setup-ros-docker:ubuntu-noble-latest
+
+    steps:
+      - name: Build and test tagged revision
+        id: ros_ci
+        uses: ros-tooling/action-ros-ci@v0.4
+        with:
+          package-name: >
+            tiago_autonomy_bringup
+            tiago_navigation
+          target-ros2-distro: jazzy
+          ref: ${{ github.ref_name }}
+          coverage-result: false
+
+      - name: Upload colcon logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-colcon-logs-${{ github.run_id }}
+          path: ${{ steps.ros_ci.outputs.ros-workspace-directory-name }}/log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  release:
+    name: Publish GitHub Release
+    needs: validate
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout tagged revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create versioned source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          VERSION="${GITHUB_REF_NAME}"
+
+          mkdir -p dist
+
+          git archive \
+            --format=tar.gz \
+            --prefix="${REPO_NAME}-${VERSION}/" \
+            --output="dist/${REPO_NAME}-${VERSION}.tar.gz" \
+            "${GITHUB_SHA}"
+
+          sha256sum \
+            "dist/${REPO_NAME}-${VERSION}.tar.gz" \
+            > "dist/${REPO_NAME}-${VERSION}.tar.gz.sha256"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/*.tar.gz \
+            dist/*.sha256 \
+            --verify-tag \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes

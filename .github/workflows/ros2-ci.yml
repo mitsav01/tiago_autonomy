@@ -1,0 +1,76 @@
+name: ROS 2 Jazzy CI
+
+on:
+  push:
+    branches:
+      - jazzy
+
+  pull_request:
+    branches:
+      - jazzy
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ros2-jazzy-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+
+    container:
+      image: rostooling/setup-ros-docker:ubuntu-noble-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install formatters
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            python3-black \
+            ros-jazzy-ament-clang-format
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Check Python and C/C++ formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x tools/format_code.sh
+          ./tools/format_code.sh --check
+
+  build-and-test:
+    name: Build & Test
+    needs: format-check
+    runs-on: ubuntu-latest
+
+    container:
+      image: rostooling/setup-ros-docker:ubuntu-noble-latest
+
+    steps:
+      - name: Build and test ROS 2 packages
+        id: ros_ci
+        uses: ros-tooling/action-ros-ci@v0.4
+        with:
+          package-name: >
+            tiago_autonomy_bringup
+            tiago_navigation
+          target-ros2-distro: jazzy
+          coverage-result: false
+
+      - name: Upload colcon logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: colcon-logs-${{ github.run_id }}
+          path: ${{ steps.ros_ci.outputs.ros-workspace-directory-name }}/log
+          if-no-files-found: ignore
+          retention-days: 14

@@ -427,127 +427,58 @@ map_saver:
 docking_server:
   ros__parameters:
     use_sim_time: true
-
     controller_frequency: 10.0
-
     initial_perception_timeout: 10.0
     wait_charge_timeout: 5.0
     dock_approach_timeout: 90.0
-
     undock_linear_tolerance: 0.05
     undock_angular_tolerance: 0.05
-
     max_retries: 5
-
     base_frame: base_footprint
     fixed_frame: odom
-
-    # Keep this TRUE only if your already-working static docking
-    # was intentionally backing the robot into the dock.
     dock_backwards: true
-
     dock_prestaging_tolerance: 0.5
-
     enable_stamped_cmd_vel: false
-
-
-    # ============================================================
-    # DOCK DATABASE
-    # ============================================================
-
+    
     docks: ['dock_tiago']
 
     dock_tiago:
       type: simple_charging_dock
       frame: map
-
-      # KEEP the coarse / nominal docking pose.
-      # Do NOT replace this with the AprilTag coordinates.
       pose: [8.17, 4.70, 1.5708]
-
       id: "dock_tiago"
-
-
-    # ============================================================
-    # DOCK PLUGIN
-    # ============================================================
 
     dock_plugins:
       - simple_charging_dock
 
     simple_charging_dock:
       plugin: opennav_docking::SimpleChargingDock
-
-      # Keep 10 cm initially while debugging.
-      # Can later reduce to 0.05.
       docking_threshold: 0.10
-
-      # CHANGED:
-      # -0.05 was only 5 cm from the dock and is too close
-      # for a useful perception/staging pose.
       staging_x_offset: -0.40
-
-      # CHANGED:
-      # Use /detected_dock_pose instead of only database pose.
       use_external_detection_pose: true
-
-      # Give your perception pipeline some margin.
       external_detection_timeout: 2.0
-
-      # Tag is at approximately y = 4.93.
-      # Successful static dock control pose is approximately y = 4.70.
-      #
-      # At dock yaw +90 deg:
-      # local -X corresponds approximately to map -Y.
       external_detection_translation_x: -0.23
       external_detection_translation_y: 0.0
-
-      # Initial AprilTag -> planar dock orientation correction.
-      #
-      # IMPORTANT:
-      # We will verify this using /dock_pose before trusting it.
       external_detection_rotation_roll: -1.5708
       external_detection_rotation_pitch: 1.5708
       external_detection_rotation_yaw: 0.0
-
-      # Low-pass filtering of detected dock pose
       filter_coef: 0.1
-
-      # Simulation currently has no real charging feedback.
       use_battery_status: false
       use_stall_detection: false
-
-
-    # ============================================================
-    # DOCKING CONTROLLER
-    # ============================================================
 
     controller:
       k_phi: 1.5
       k_delta: 1.0
-
       beta: 0.4
       lambda: 2.0
-
-      # CHANGED for first visual-docking experiments.
-      # 0.35 m/s is unnecessarily fast while calibrating vision.
       v_linear_min: 0.05
       v_linear_max: 0.15
-
       v_angular_max: 0.40
-
       slowdown_radius: 0.30
-
-      # Keep disabled until visual docking works reliably.
       use_collision_detection: false
-
       costmap_topic: /local_costmap/costmap_raw
       footprint_topic: /local_costmap/published_footprint
-
       transform_tolerance: 0.1
       projection_time: 5.0
-
-      # Keep this name for your Jazzy configuration.
       simulation_step: 0.1
-
       dock_collision_threshold: 0.3

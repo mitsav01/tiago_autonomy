@@ -64,9 +64,6 @@ def generate_launch_description():
             'use_respawn': 'True',
             'use_composition': 'False',
         }.items(),
-        # remappings=[
-        #     ('/cmd_vel','/mobile_base_controller/cmd_vel')
-        # ]
     )
 
     apriltag_dock_node = Node(
