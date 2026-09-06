@@ -336,13 +336,9 @@ camera → dock_apriltag
 
 and uses the scale relationship:
 
-\[
-s_\mathrm{new}
-=
-s_\mathrm{old}
-\frac{d_\mathrm{true}}
-     {d_\mathrm{estimated}}
-\]
+$$
+s_{\mathrm{new}} = s_{\mathrm{old}} \frac{d_{\mathrm{true}}}{d_{\mathrm{estimated}}}
+$$
 
 ---
 
