@@ -32,10 +32,7 @@ def generate_launch_description():
         "apriltag_dock.yaml",
     )
 
-    nav2_launch_file_dir = os.path.join(
-        nav2_pkg,
-        "launch", "bringup_launch.py"
-    )
+    nav2_launch_file_dir = os.path.join(nav2_pkg, "launch", "bringup_launch.py")
 
     nav2_params_file = os.path.join(
         tiago_nav_pkg,
@@ -44,55 +41,53 @@ def generate_launch_description():
     )
 
     ekf_node = Node(
-        package='robot_localization',
-        executable='ekf_node',
-        name='ekf_filter_node',
-        output='screen',
-        parameters=[ekf_params_file,
-                    {'use_sim_time': True}
-                    ]
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[ekf_params_file, {"use_sim_time": True}],
     )
 
     nav2_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(nav2_launch_file_dir),
         launch_arguments={
-            'slam': 'False',
-            'map': map_yaml_file,
-            'use_sim_time': 'True',
-            'params_file': nav2_params_file,
-            'autostart': 'True',
-            'use_respawn': 'True',
-            'use_composition': 'False',
+            "slam": "False",
+            "map": map_yaml_file,
+            "use_sim_time": "True",
+            "params_file": nav2_params_file,
+            "autostart": "True",
+            "use_respawn": "True",
+            "use_composition": "False",
         }.items(),
     )
 
     apriltag_dock_node = Node(
-        package='apriltag_ros',
-        executable='apriltag_node',
-        name='apriltag_dock_node',
-        output='screen',
-        parameters=[apriltag_dock_params_file,
-                    {'use_sim_time': True}
-                    ],
+        package="apriltag_ros",
+        executable="apriltag_node",
+        name="apriltag_dock_node",
+        output="screen",
+        parameters=[apriltag_dock_params_file, {"use_sim_time": True}],
         remappings=[
             ("image_rect", "/head_front_camera/image"),
             ("camera_info", "/head_front_camera/camera_info"),
-        ]
+        ],
     )
 
     dock_pose_publisher_node = Node(
-    package="tiago_navigation",
-    executable="dock_pose_publisher.py",
-    name="dock_pose_publisher",
-    output="screen",
-    parameters=[
-        {"use_sim_time": True},
-    ],
-)
-    
-    return LaunchDescription([
-        ekf_node,
-        nav2_node,
-        apriltag_dock_node,
-        dock_pose_publisher_node,
-    ])
+        package="tiago_navigation",
+        executable="dock_pose_publisher.py",
+        name="dock_pose_publisher",
+        output="screen",
+        parameters=[
+            {"use_sim_time": True},
+        ],
+    )
+
+    return LaunchDescription(
+        [
+            ekf_node,
+            nav2_node,
+            apriltag_dock_node,
+            dock_pose_publisher_node,
+        ]
+    )

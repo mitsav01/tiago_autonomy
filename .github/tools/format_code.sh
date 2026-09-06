@@ -12,6 +12,7 @@ ROS_DISTRO_NAME="${ROS_DISTRO:-jazzy}"
 export AMENT_TRACE_SETUP_FILES=0
 
 if [[ -f "/opt/ros/${ROS_DISTRO_NAME}/setup.bash" ]]; then
+  export AMENT_TRACE_SETUP_FILES=0
   set +u
   # shellcheck disable=SC1090
   source "/opt/ros/${ROS_DISTRO_NAME}/setup.bash"

@@ -21,29 +21,17 @@ class DockPosePublisher(Node):
         self.tag_frame = "dock_apriltag"
 
         self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(
-            self.tf_buffer,
-            self
-        )
+        self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.publisher = self.create_publisher(
-            PoseStamped,
-            "/detected_dock_pose",
-            10
-        )
+        self.publisher = self.create_publisher(PoseStamped, "/detected_dock_pose", 10)
 
-        self.timer = self.create_timer(
-            0.05,
-            self.publish_pose
-        )
+        self.timer = self.create_timer(0.05, self.publish_pose)
 
     def publish_pose(self):
 
         try:
             tf = self.tf_buffer.lookup_transform(
-                self.target_frame,
-                self.tag_frame,
-                Time()
+                self.target_frame, self.tag_frame, Time()
             )
 
         except TransformException:

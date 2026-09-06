@@ -30,7 +30,7 @@ def make_filename_handler(package_dir: str, urdf_dir: str):
             return os.path.normpath(fname[7:])
 
         if fname.startswith("package://"):
-            package_uri = fname[len("package://"):]
+            package_uri = fname[len("package://") :]
             parts = package_uri.split("/", 1)
             if len(parts) != 2:
                 return fname
@@ -148,8 +148,7 @@ def band_xy_bounds(meshes, z_min: float, z_max: float) -> np.ndarray:
 
     xy = np.vstack(xy)
     return np.array(
-        [[xy[:, 0].min(), xy[:, 1].min()],
-         [xy[:, 0].max(), xy[:, 1].max()]],
+        [[xy[:, 0].min(), xy[:, 1].min()], [xy[:, 0].max(), xy[:, 1].max()]],
         dtype=float,
     )
 
@@ -157,7 +156,12 @@ def band_xy_bounds(meshes, z_min: float, z_max: float) -> np.ndarray:
 def to_world_xy(points_2d: np.ndarray, to_3d: np.ndarray) -> np.ndarray:
     points_2d = np.asarray(points_2d, dtype=float)
     p = np.column_stack(
-        [points_2d[:, 0], points_2d[:, 1], np.zeros(len(points_2d)), np.ones(len(points_2d))]
+        [
+            points_2d[:, 0],
+            points_2d[:, 1],
+            np.zeros(len(points_2d)),
+            np.ones(len(points_2d)),
+        ]
     )
     return (to_3d @ p.T).T[:, :2]
 
@@ -186,10 +190,7 @@ def draw_polyline_world(mask, xy, min_x, min_y, resolution):
 
     for i in range(len(xy) - 1):
         rr, cc = draw_line(rows[i], cols[i], rows[i + 1], cols[i + 1])
-        valid = (
-            (rr >= 0) & (rr < mask.shape[0]) &
-            (cc >= 0) & (cc < mask.shape[1])
-        )
+        valid = (rr >= 0) & (rr < mask.shape[0]) & (cc >= 0) & (cc < mask.shape[1])
         mask[rr[valid], cc[valid]] = True
 
 
@@ -208,15 +209,11 @@ def rasterize_path2d(path, shape, min_x, min_y, resolution):
 
             poly_mask = np.zeros(shape, dtype=bool)
             exterior = to_world_xy(np.asarray(poly.exterior.coords), to_3d)
-            fill_polygon_world(
-                poly_mask, exterior, min_x, min_y, resolution, True
-            )
+            fill_polygon_world(poly_mask, exterior, min_x, min_y, resolution, True)
 
             for hole in poly.interiors:
                 hole_xy = to_world_xy(np.asarray(hole.coords), to_3d)
-                fill_polygon_world(
-                    poly_mask, hole_xy, min_x, min_y, resolution, False
-                )
+                fill_polygon_world(poly_mask, hole_xy, min_x, min_y, resolution, False)
 
             result |= poly_mask
     except Exception as exc:
@@ -226,9 +223,7 @@ def rasterize_path2d(path, shape, min_x, min_y, resolution):
     for curve_2d in path.discrete:
         if len(curve_2d) >= 2:
             curve_xy = to_world_xy(np.asarray(curve_2d), to_3d)
-            draw_polyline_world(
-                result, curve_xy, min_x, min_y, resolution
-            )
+            draw_polyline_world(result, curve_xy, min_x, min_y, resolution)
 
     return result
 
@@ -276,7 +271,8 @@ def urdf_to_occupancy_grid(
     )
 
     active = [
-        (name, mesh) for name, mesh in named_meshes
+        (name, mesh)
+        for name, mesh in named_meshes
         if mesh.bounds[1, 2] >= z_min and mesh.bounds[0, 2] <= z_max
     ]
     if not active:
@@ -360,12 +356,18 @@ def parse_args():
     parser.add_argument("--z-step", type=float, default=0.025)
     parser.add_argument("--padding", type=float, default=0.50)
     parser.add_argument(
-        "--xyz", nargs=3, type=float, default=[0.0, 0.0, 0.0],
+        "--xyz",
+        nargs=3,
+        type=float,
+        default=[0.0, 0.0, 0.0],
         metavar=("X", "Y", "Z"),
         help="Pose of the URDF root in the map/world frame [m]",
     )
     parser.add_argument(
-        "--rpy", nargs=3, type=float, default=[0.0, 0.0, 0.0],
+        "--rpy",
+        nargs=3,
+        type=float,
+        default=[0.0, 0.0, 0.0],
         metavar=("R", "P", "Y"),
         help="Pose of the URDF root in the map/world frame [rad]",
     )

@@ -110,13 +110,10 @@ def generate_launch_description():
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
             "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
-
             # Capitalization is important
             "/base_imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
-
             "/head_front_camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
             "/head_front_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
-
             "/head_front_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image",
             "/head_front_camera/depth_camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
         ],
