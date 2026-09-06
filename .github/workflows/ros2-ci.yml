@@ -39,6 +39,7 @@ jobs:
 
           apt-get install -y --no-install-recommends \
             python3-pip \
+            ros-jazzy-xacro \
             ros-jazzy-ament-clang-format
 
           python3 -m pip install \
