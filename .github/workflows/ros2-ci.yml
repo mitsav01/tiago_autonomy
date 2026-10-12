@@ -100,11 +100,12 @@ jobs:
         run: |
           set -euo pipefail
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
-          if [ -f "${WS_DIR}/install/setup.sh" ]; then
-            set +u
-            . "${WS_DIR}/install/setup.sh"
-            set -u
-          fi
+
+          set +u
+          [ -f "/opt/ros/jazzy/setup.sh" ] && . "/opt/ros/jazzy/setup.sh"
+          [ -f "${WS_DIR}/install/setup.sh" ] && . "${WS_DIR}/install/setup.sh"
+          set -u
+
           python3 -m pytest -v "${WS_DIR}/src"/**/tiago_field_tools/tests/test_schema_and_metrics.py || true
 
       # =========================================================================
@@ -115,11 +116,11 @@ jobs:
         run: |
           set -uo pipefail
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
-          if [ -f "${WS_DIR}/install/setup.sh" ]; then
-            set +u
-            . "${WS_DIR}/install/setup.sh"
-            set -u
-          fi
+
+          set +u
+          [ -f "/opt/ros/jazzy/setup.sh" ] && . "/opt/ros/jazzy/setup.sh"
+          [ -f "${WS_DIR}/install/setup.sh" ] && . "${WS_DIR}/install/setup.sh"
+          set -u
 
           mkdir -p /tmp/tiago_validation_results
 
@@ -144,11 +145,11 @@ jobs:
         run: |
           set -uo pipefail
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
-          if [ -f "${WS_DIR}/install/setup.sh" ]; then
-            set +u
-            . "${WS_DIR}/install/setup.sh"
-            set -u
-          fi
+
+          set +u
+          [ -f "/opt/ros/jazzy/setup.sh" ] && . "/opt/ros/jazzy/setup.sh"
+          [ -f "${WS_DIR}/install/setup.sh" ] && . "${WS_DIR}/install/setup.sh"
+          set -u
 
           echo "Running headless validation suite..."
           ros2 run tiago_field_tools test_runner.py --ros-args -p use_sim_time:=true || true
@@ -162,11 +163,11 @@ jobs:
         run: |
           set -uo pipefail
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
-          if [ -f "${WS_DIR}/install/setup.sh" ]; then
-            set +u
-            . "${WS_DIR}/install/setup.sh"
-            set -u
-          fi
+
+          set +u
+          [ -f "/opt/ros/jazzy/setup.sh" ] && . "/opt/ros/jazzy/setup.sh"
+          [ -f "${WS_DIR}/install/setup.sh" ] && . "${WS_DIR}/install/setup.sh"
+          set -u
 
           mkdir -p /tmp/tiago_validation_results
 
