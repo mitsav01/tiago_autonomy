@@ -118,13 +118,28 @@ jobs:
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
 
           set +u
-          [ -f "/opt/ros/jazzy/setup.sh" ] && . "/opt/ros/jazzy/setup.sh"
-          [ -f "${WS_DIR}/install/setup.sh" ] && . "${WS_DIR}/install/setup.sh"
+          if [ -f "/opt/ros/jazzy/setup.bash" ]; then
+            . "/opt/ros/jazzy/setup.bash"
+          elif [ -f "/opt/ros/jazzy/setup.sh" ]; then
+            . "/opt/ros/jazzy/setup.sh"
+          else
+            echo "ERROR: /opt/ros/jazzy setup script not found. Contents of /opt/ros:"
+            ls -la /opt/ros || true
+            exit 1
+          fi
+
+          if [ -f "${WS_DIR}/install/setup.bash" ]; then
+            . "${WS_DIR}/install/setup.bash"
+          elif [ -f "${WS_DIR}/install/setup.sh" ]; then
+            . "${WS_DIR}/install/setup.sh"
+          fi
           set -u
 
           mkdir -p /tmp/tiago_validation_results
 
-          # Running health_monitor on an idle/empty container graph must return NOT_READY with exit 1
+          # Verify ros2 executable exists before running
+          which ros2
+
           echo "Verifying health_monitor catches missing nodes cleanly..."
           ros2 run tiago_field_tools health_monitor.py --json > /tmp/tiago_validation_results/preflight_empty.json
           EXIT_CODE=$?
