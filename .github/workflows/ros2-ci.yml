@@ -100,7 +100,11 @@ jobs:
         run: |
           set -euo pipefail
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
-          . "${WS_DIR}/install/setup.sh"
+          if [ -f "${WS_DIR}/install/setup.sh" ]; then
+            set +u
+            . "${WS_DIR}/install/setup.sh"
+            set -u
+          fi
           python3 -m pytest -v "${WS_DIR}/src"/**/tiago_field_tools/tests/test_schema_and_metrics.py || true
 
       # =========================================================================
@@ -111,7 +115,11 @@ jobs:
         run: |
           set -uo pipefail
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
-          . "${WS_DIR}/install/setup.sh"
+          if [ -f "${WS_DIR}/install/setup.sh" ]; then
+            set +u
+            . "${WS_DIR}/install/setup.sh"
+            set -u
+          fi
 
           mkdir -p /tmp/tiago_validation_results
 
@@ -136,7 +144,11 @@ jobs:
         run: |
           set -uo pipefail
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
-          . "${WS_DIR}/install/setup.sh"
+          if [ -f "${WS_DIR}/install/setup.sh" ]; then
+            set +u
+            . "${WS_DIR}/install/setup.sh"
+            set -u
+          fi
 
           echo "Running headless validation suite..."
           ros2 run tiago_field_tools test_runner.py --ros-args -p use_sim_time:=true || true
@@ -150,7 +162,11 @@ jobs:
         run: |
           set -uo pipefail
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
-          . "${WS_DIR}/install/setup.sh"
+          if [ -f "${WS_DIR}/install/setup.sh" ]; then
+            set +u
+            . "${WS_DIR}/install/setup.sh"
+            set -u
+          fi
 
           mkdir -p /tmp/tiago_validation_results
 
