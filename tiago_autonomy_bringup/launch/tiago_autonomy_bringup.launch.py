@@ -86,22 +86,6 @@ def generate_launch_description():
         output="screen",
     )
 
-    # gz_bridge = Node(
-    #     package="ros_gz_bridge",
-    #     executable="parameter_bridge",
-    #     arguments=[
-    #         "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
-    #         "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
-    #         "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
-    #         "/base_imu@sensor_msgs/msg/Imu[gz.msgs.Imu",
-    #         "/head_front_camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
-    #         "/head_front_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
-    #         "/head_front_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image",
-    #         "/head_front_camera/depth_camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
-    #     ],
-    #     parameters=[{"use_sim_time": True}],
-    #     output="screen",
-    # )
     gz_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -109,8 +93,6 @@ def generate_launch_description():
         arguments=[
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
             "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
-            "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
-            # Capitalization is important
             "/base_imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
             "/head_front_camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
             "/head_front_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
@@ -122,6 +104,7 @@ def generate_launch_description():
         ],
         output="screen",
     )
+
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",

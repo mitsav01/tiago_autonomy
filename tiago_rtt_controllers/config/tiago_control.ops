@@ -1,0 +1,59 @@
+import("rtt_ros2")
+import("rtt_ros2_node")
+import("rtt_ros2_topics")
+import("rtt_ros2_std_msgs")
+import("rtt_ros2_sensor_msgs")
+import("rtt_ros2_trajectory_msgs")
+import("rtt_ros2_geometry_msgs")
+import("tiago_rtt_controllers")
+
+// 1. Instantiate Controller Components
+loadComponent("ArmRightController", "TiagoCartesianController")
+loadComponent("ArmLeftController", "TiagoCartesianController")
+
+// 2. Attach ROS 2 Node Services
+loadService("ArmRightController", "rosnode")
+loadService("ArmLeftController", "rosnode")
+
+// 3. Configure Properties
+ArmRightController.joint_prefix = "arm_right_"
+ArmRightController.root_frame = "base_link"
+ArmRightController.damping_gain = 10.0
+
+ArmLeftController.joint_prefix = "arm_left_"
+ArmLeftController.root_frame = "base_link"
+ArmLeftController.damping_gain = 10.0
+
+// 4. Configure Real-Time Activities (1000 Hz, SCHED_FIFO Priority 98)
+setActivity("ArmRightController", 0.001, 98, ORO_SCHED_RT)
+setActivity("ArmLeftController", 0.001, 98, ORO_SCHED_RT)
+
+// 5. Pin to Dedicated CPU Cores
+ArmRightController.setCpuAffinity(2)
+ArmLeftController.setCpuAffinity(3)
+
+// 6. Connect Real-Time Ports to ROS 2 Topics
+stream("ArmRightController.joint_states_in", ros.topic("/joint_states", false))
+stream("ArmLeftController.joint_states_in", ros.topic("/joint_states", false))
+
+stream("ArmRightController.ft_sensor_in", ros.topic("/wrist_right_ft", false))
+stream("ArmLeftController.ft_sensor_in", ros.topic("/wrist_left_ft", false))
+
+stream("ArmRightController.target_pose_in", ros.topic("/arm_right/target_pose", false))
+stream("ArmLeftController.target_pose_in", ros.topic("/arm_left/target_pose", false))
+
+stream("ArmRightController.twist_cmd_in", ros.topic("/arm_right/cmd_vel", false))
+stream("ArmLeftController.twist_cmd_in", ros.topic("/arm_left/cmd_vel", false))
+
+stream("ArmRightController.joint_cmd_out", ros.topic("/arm_right_point_controller/joint_commands", false))
+stream("ArmLeftController.joint_cmd_out", ros.topic("/arm_left_point_controller/joint_commands", false))
+
+stream("ArmRightController.current_pose_out", ros.topic("/arm_right/current_pose", false))
+stream("ArmLeftController.current_pose_out", ros.topic("/arm_left/current_pose", false))
+
+// 7. Lifecycle Transitions
+ArmRightController.configure()
+ArmLeftController.configure()
+
+ArmRightController.start()
+ArmLeftController.start()

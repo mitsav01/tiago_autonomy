@@ -10,6 +10,7 @@ install(DIRECTORY launch config maps
 
 install(PROGRAMS
 scripts/dock_pose_publisher.py
+scripts/twist_to_twiststamped.py
 DESTINATION lib/${PROJECT_NAME}
 )
 ament_package()

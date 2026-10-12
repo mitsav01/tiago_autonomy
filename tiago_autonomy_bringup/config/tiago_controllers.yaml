@@ -1,11 +1,21 @@
 controller_manager:
   ros__parameters:
-    update_rate: 100
+    update_rate: 1000  # 1 kHz main control loop
     switch_controller_timeout: 30.0
-    
+
+    # Real-time execution parameters (SCHED_FIFO on dedicated CPU Core 1)
+    thread_priority: 95
+    cpu_affinity: 1
+
+    # Overrun monitoring
+    enforce_rate: true
+    warn_on_overrun: true
+
+    # State broadcaster
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+    # Trajectory controllers (asynchronous / planning tasks)
     head_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
@@ -21,12 +31,23 @@ controller_manager:
     arm_right_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
+    # Direct 1 kHz JointTrajectoryPoint streamers (Orocos RTT bridge)
+    arm_left_point_controller:
+      type: tiago_joint_point_controllers/JointPointCommandController
+
+    arm_right_point_controller:
+      type: tiago_joint_point_controllers/JointPointCommandController
+
+    # End-effector controllers
     left_robotiq_gripper_controller:
       type: parallel_gripper_action_controller/GripperActionController
 
     right_robotiq_gripper_controller:
       type: parallel_gripper_action_controller/GripperActionController
 
+# -----------------------------------------------------------------------------
+# Head Controller
+# -----------------------------------------------------------------------------
 head_controller:
   ros__parameters:
     joints:
@@ -38,25 +59,20 @@ head_controller:
       - position
 
     gains:
-      head_1_joint:
-        p: 0.0
-        i: 0.0
-        d: 0.0
-      head_2_joint:
-        p: 0.0
-        i: 0.0
-        d: 0.0
+      head_1_joint: {p: 0.0, i: 0.0, d: 0.0}
+      head_2_joint: {p: 0.0, i: 0.0, d: 0.0}
 
     interpolate_from_desired_state: true
 
     constraints:
       goal_time: 2.0
       stopped_velocity_tolerance: 5.0
-      head_1_joint:
-        goal: 0.5
-      head_2_joint:
-        goal: 0.5
+      head_1_joint: {goal: 0.5}
+      head_2_joint: {goal: 0.5}
 
+# -----------------------------------------------------------------------------
+# Torso Controller
+# -----------------------------------------------------------------------------
 torso_controller:
   ros__parameters:
     joints:
@@ -76,9 +92,12 @@ torso_controller:
       stopped_velocity_tolerance: 5.0
       torso_lift_joint: {goal: 0.02}
 
+# -----------------------------------------------------------------------------
+# Mobile Base Controller
+# -----------------------------------------------------------------------------
 mobile_base_controller:
   ros__parameters:
-    use_stamped_vel: true
+    use_stamped_vel: false
     publish_limited_velocity: true
     publish_odom_tf: true
 
@@ -87,19 +106,19 @@ mobile_base_controller:
 
     wheel_radius: 0.0985
     wheel_separation: 0.4044
-
     wheel_separation_multiplier: 1.0
     left_wheel_radius_multiplier: 1.0
     right_wheel_radius_multiplier: 1.0
-    
+
+    # Throttle odometry/TF DDS publishing to 50 Hz to prevent network flooding at 1 kHz update_rate
     publish_rate: 50.0
+
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
 
     cmd_vel_timeout: 2.5
     odom_frame_id: odom
     base_frame_id: base_footprint
-    # enable_odom_tf: true
 
     linear:
       x:
@@ -115,6 +134,9 @@ mobile_base_controller:
         has_acceleration_limits: true
         max_acceleration: 2.5
 
+# -----------------------------------------------------------------------------
+# Arm Trajectory Controllers (JTC)
+# -----------------------------------------------------------------------------
 arm_left_controller:
   ros__parameters:
     joints:
@@ -189,6 +211,36 @@ arm_right_controller:
       arm_right_6_joint: {goal: 0.02}
       arm_right_7_joint: {goal: 0.02}
 
+# -----------------------------------------------------------------------------
+# Orocos Real-Time Direct Point Controllers (1 kHz Streamers)
+# -----------------------------------------------------------------------------
+arm_left_point_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - arm_left_1_joint
+      - arm_left_2_joint
+      - arm_left_3_joint
+      - arm_left_4_joint
+      - arm_left_5_joint
+      - arm_left_6_joint
+      - arm_left_7_joint
+
+arm_right_point_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - arm_right_1_joint
+      - arm_right_2_joint
+      - arm_right_3_joint
+      - arm_right_4_joint
+      - arm_right_5_joint
+      - arm_right_6_joint
+      - arm_right_7_joint
+
+# -----------------------------------------------------------------------------
+# Gripper Controllers
+# -----------------------------------------------------------------------------
 left_robotiq_gripper_controller:
   ros__parameters:
     joint: gripper_left_finger_joint
@@ -197,7 +249,7 @@ left_robotiq_gripper_controller:
     allow_stalling: true
     stall_timeout: 0.05
     goal_tolerance: 0.02
- 
+
 right_robotiq_gripper_controller:
   ros__parameters:
     joint: gripper_right_finger_joint
@@ -206,4 +258,3 @@ right_robotiq_gripper_controller:
     allow_stalling: true
     stall_timeout: 0.05
     goal_tolerance: 0.02
-

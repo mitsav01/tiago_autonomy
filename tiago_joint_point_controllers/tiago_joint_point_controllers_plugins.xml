@@ -1,0 +1,7 @@
+<library path="tiago_joint_point_controllers">
+  <class name="tiago_joint_point_controllers/JointPointCommandController"
+         type="tiago_joint_point_controllers::JointPointCommandController"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>Direct 1 kHz JointTrajectoryPoint command streamer.</description>
+  </class>
+</library>

@@ -1,0 +1,47 @@
+test_suite:
+  name: "tiago_application_validation"
+  repetitions: 10
+  output_dir: "/tmp/tiago_validation_results"
+
+thresholds:
+  min_nav_success_rate: 0.85
+  min_dock_success_rate: 0.80
+  max_nav_duration_s: 90.0
+  max_dock_duration_s: 45.0
+  max_dock_position_error_m: 0.05
+  max_dock_yaw_error_deg: 3.0
+
+monitoring:
+  topic_stale_timeout_seconds: 2.0
+  record_cpu_memory: true
+  required_nodes:
+    - "/robot_state_publisher"
+    - "/controller_manager"
+    - "/bt_navigator"
+    - "/docking_server"
+  required_topics:
+    - name: "/scan"
+      expected_hz: 10.0
+      min_hz: 7.0
+    - name: "/mobile_base_controller/odom"
+      expected_hz: 50.0
+      min_hz: 30.0
+    - name: "/tf"
+      expected_hz: 50.0
+      min_hz: 30.0
+    - name: "/head_front_camera/image"
+      expected_hz: 15.0
+      min_hz: 5.0
+
+navigation:
+  action_server: "/navigate_to_pose"
+  timeout_seconds: 120.0
+  goals:
+    - {x: 1.5, y: 0.0, yaw: 0.0}
+    - {x: 0.5, y: -0.5, yaw: 1.57}
+    - {x: 0.0, y: 0.0, yaw: 0.0}
+
+docking:
+  action_server: "/dock_robot"
+  timeout_seconds: 60.0
+  use_dock_pose_topic: true
