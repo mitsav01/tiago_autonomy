@@ -7,7 +7,10 @@ from pathlib import Path
 import sys
 import yaml
 
-from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
+from ament_index_python.packages import (
+    PackageNotFoundError,
+    get_package_share_directory,
+)
 
 
 def get_default_config_path() -> str:
@@ -30,7 +33,9 @@ def get_default_config_path() -> str:
     except PackageNotFoundError:
         pass
 
-    src_path = Path(__file__).resolve().parent.parent / "config" / "acceptance_tests.yaml"
+    src_path = (
+        Path(__file__).resolve().parent.parent / "config" / "acceptance_tests.yaml"
+    )
     if src_path.is_file():
         return str(src_path)
 
@@ -40,7 +45,9 @@ def get_default_config_path() -> str:
     )
 
 
-def generate_markdown_report(metrics_path, config_path, output_md_path, baseline_path=None):
+def generate_markdown_report(
+    metrics_path, config_path, output_md_path, baseline_path=None
+):
     if not os.path.exists(metrics_path):
         raise FileNotFoundError(f"Metrics file not found: {metrics_path}")
     if not os.path.exists(config_path):
@@ -57,7 +64,10 @@ def generate_markdown_report(metrics_path, config_path, output_md_path, baseline
             with open(baseline_path, "r") as f:
                 baseline = json.load(f)
         except Exception as e:
-            print(f"Warning: Failed to load baseline metrics from {baseline_path}: {e}", file=sys.stderr)
+            print(
+                f"Warning: Failed to load baseline metrics from {baseline_path}: {e}",
+                file=sys.stderr,
+            )
 
     nav = metrics.get("navigation", {})
     t_cfg = cfg.get("thresholds", {})
@@ -78,7 +88,9 @@ def generate_markdown_report(metrics_path, config_path, output_md_path, baseline
     lines = []
     lines.append(f"# Site Acceptance Test (SAT) Protocol: {suite_name}")
     lines.append(f"**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  ")
-    lines.append(f"**Overall Result:** {'🟢 PASS' if overall_status == 'PASS' else '🔴 FAIL'}\n")
+    lines.append(
+        f"**Overall Result:** {'🟢 PASS' if overall_status == 'PASS' else '🔴 FAIL'}\n"
+    )
     lines.append("---")
 
     lines.append("## 1. Key Performance Summary")
@@ -89,20 +101,28 @@ def generate_markdown_report(metrics_path, config_path, output_md_path, baseline
     target_succ = f"≥ {min_succ_rate * 100:.0f}%"
     base_succ = (
         f"{baseline['navigation']['success_rate'] * 100:.1f}%"
-        if baseline and "navigation" in baseline and "success_rate" in baseline["navigation"]
+        if baseline
+        and "navigation" in baseline
+        and "success_rate" in baseline["navigation"]
         else "N/A"
     )
     succ_status = "OK" if actual_succ_rate >= min_succ_rate else "DEFICIT"
-    lines.append(f"| Navigation Success Rate | **{nav_succ_pct}** | {target_succ} | {base_succ} | {succ_status} |")
+    lines.append(
+        f"| Navigation Success Rate | **{nav_succ_pct}** | {target_succ} | {base_succ} | {succ_status} |"
+    )
 
     med_dur = f"{median_duration:.1f} s"
     base_med = (
         f"{baseline['navigation']['median_duration_s']:.1f} s"
-        if baseline and "navigation" in baseline and "median_duration_s" in baseline["navigation"]
+        if baseline
+        and "navigation" in baseline
+        and "median_duration_s" in baseline["navigation"]
         else "N/A"
     )
     dur_status = "OK" if median_duration <= max_duration else "DEFICIT"
-    lines.append(f"| Median Navigation Duration | **{med_dur}** | ≤ {max_duration:.1f} s | {base_med} | {dur_status} |")
+    lines.append(
+        f"| Median Navigation Duration | **{med_dur}** | ≤ {max_duration:.1f} s | {base_med} | {dur_status} |"
+    )
 
     p95_dur = f"{nav.get('p95_duration_s', 0.0):.1f} s"
     lines.append(f"| 95th Percentile Duration | **{p95_dur}** | N/A | N/A | OK |")
@@ -115,14 +135,22 @@ def generate_markdown_report(metrics_path, config_path, output_md_path, baseline
         lines.append("| Failure Classification | Occurrences | Root Cause Hypothesis |")
         lines.append("| :--- | :--- | :--- |")
         for reason, count in fail_breakdown.items():
-            lines.append(f"| `{reason}` | {count} | Costmap collision, goal abort, or recovery timeout |")
+            lines.append(
+                f"| `{reason}` | {count} | Costmap collision, goal abort, or recovery timeout |"
+            )
 
     lines.append("\n## 3. Engineering Recommendations")
     if not nav_pass:
-        lines.append("- **Investigate DDS QoS & Memory Headroom:** Memory elevated during trial execution. Profile gzserver and bt_navigator.")
-        lines.append("- **Tune Costmap Layer Clearing:** Inspect obstacle inflation parameters and recovery behaviors for narrow corridors.")
+        lines.append(
+            "- **Investigate DDS QoS & Memory Headroom:** Memory elevated during trial execution. Profile gzserver and bt_navigator."
+        )
+        lines.append(
+            "- **Tune Costmap Layer Clearing:** Inspect obstacle inflation parameters and recovery behaviors for narrow corridors."
+        )
     else:
-        lines.append("- The deployed build satisfies all functional acceptance criteria.")
+        lines.append(
+            "- The deployed build satisfies all functional acceptance criteria."
+        )
 
     output_path = Path(output_md_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -133,7 +161,9 @@ def generate_markdown_report(metrics_path, config_path, output_md_path, baseline
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Compile SAT Markdown Acceptance Report")
+    parser = argparse.ArgumentParser(
+        description="Compile SAT Markdown Acceptance Report"
+    )
     parser.add_argument(
         "--metrics",
         type=str,

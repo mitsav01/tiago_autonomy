@@ -38,18 +38,22 @@ def rclpy_session():
         rclpy.shutdown()
 
 
-def create_mock_config(tmp_dir: Path, required_nodes=None, required_topics=None, min_disk=1.0):
+def create_mock_config(
+    tmp_dir: Path, required_nodes=None, required_topics=None, min_disk=1.0
+):
     """Generates a minimal acceptance_tests.yaml tailored for mock evaluation."""
     cfg = {
         "monitoring": {
             "topic_stale_timeout_seconds": 2.0,
             "min_disk_free_gb": min_disk,
             "max_ram_percent": 95.0,
-            "required_nodes": required_nodes or [
+            "required_nodes": required_nodes
+            or [
                 "/robot_state_publisher",
                 "/controller_manager",
             ],
-            "required_topics": required_topics or [
+            "required_topics": required_topics
+            or [
                 {"name": "/scan", "min_hz": 5.0},
                 {"name": "/mobile_base_controller/odom", "min_hz": 10.0},
             ],
@@ -72,7 +76,9 @@ class MockRobotGraph(Node):
         super().__init__("robot_state_publisher")
 
         self.scan_pub = self.create_publisher(LaserScan, "/scan", 10)
-        self.odom_pub = self.create_publisher(Odometry, "/mobile_base_controller/odom", 10)
+        self.odom_pub = self.create_publisher(
+            Odometry, "/mobile_base_controller/odom", 10
+        )
 
         # 10 Hz timer for scan, 20 Hz timer for odom
         self.create_timer(0.1, self._publish_scan)
@@ -111,15 +117,24 @@ def test_empty_graph_reports_not_ready(rclpy_session):
         result = evaluate_readiness(config_path=cfg_file, sim_time=False)
 
         assert result["status"] == "NOT_READY"
-        assert any("Missing node: /robot_state_publisher" in err for err in result["failed_checks"])
-        assert any("Topic not published: /scan" in err for err in result["failed_checks"])
+        assert any(
+            "Missing node: /robot_state_publisher" in err
+            for err in result["failed_checks"]
+        )
+        assert any(
+            "Topic not published: /scan" in err for err in result["failed_checks"]
+        )
 
 
 def test_mock_graph_healthy(rclpy_session, monkeypatch):
     """Spins a mock graph and verifies evaluate_readiness reports READY with mocked disk headroom."""
     # Mock disk_usage so low-disk laptop conditions never fail unit tests
     DiskUsage = namedtuple("DiskUsage", ["total", "used", "free", "percent"])
-    monkeypatch.setattr(psutil, "disk_usage", lambda path: DiskUsage(100 * (1024**3), 20 * (1024**3), 80 * (1024**3), 20.0))
+    monkeypatch.setattr(
+        psutil,
+        "disk_usage",
+        lambda path: DiskUsage(100 * (1024**3), 20 * (1024**3), 80 * (1024**3), 20.0),
+    )
 
     mock_robot = MockRobotGraph()
     mock_controller_mgr = Node("controller_manager")
@@ -150,7 +165,10 @@ def test_mock_graph_healthy(rclpy_session, monkeypatch):
             assert result["status"] == "READY", f"Expected READY, got {result}"
             assert len(result["failed_checks"]) == 0
             assert result["metrics"]["topics"]["/scan"]["status"] == "HEALTHY"
-            assert result["metrics"]["topics"]["/mobile_base_controller/odom"]["status"] == "HEALTHY"
+            assert (
+                result["metrics"]["topics"]["/mobile_base_controller/odom"]["status"]
+                == "HEALTHY"
+            )
             assert result["metrics"]["nav_action_ready"] is True
 
     finally:
@@ -163,7 +181,11 @@ def test_mock_graph_healthy(rclpy_session, monkeypatch):
 def test_mock_graph_degraded_hz(rclpy_session, monkeypatch):
     """Verifies that under-publishing sensor topics triggers DEGRADED status."""
     DiskUsage = namedtuple("DiskUsage", ["total", "used", "free", "percent"])
-    monkeypatch.setattr(psutil, "disk_usage", lambda path: DiskUsage(100 * (1024**3), 20 * (1024**3), 80 * (1024**3), 20.0))
+    monkeypatch.setattr(
+        psutil,
+        "disk_usage",
+        lambda path: DiskUsage(100 * (1024**3), 20 * (1024**3), 80 * (1024**3), 20.0),
+    )
 
     mock_robot = Node("robot_state_publisher")
     mock_controller = Node("controller_manager")
@@ -192,7 +214,9 @@ def test_mock_graph_degraded_hz(rclpy_session, monkeypatch):
             result = evaluate_readiness(config_path=cfg_file, sim_time=False)
 
             assert result["status"] in ["DEGRADED", "NOT_READY"]
-            assert any("Topic degraded: /scan" in warn for warn in result["degraded_checks"])
+            assert any(
+                "Topic degraded: /scan" in warn for warn in result["degraded_checks"]
+            )
 
     finally:
         executor.shutdown()

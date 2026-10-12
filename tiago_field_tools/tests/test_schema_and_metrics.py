@@ -38,9 +38,27 @@ def test_metrics_collector_math():
         out_csv = Path(tmp) / "metrics.csv"
 
         sample_trials = [
-            {"trial_id": 1, "type": "navigation", "success": True, "duration": 20.0, "failure_reason": None},
-            {"trial_id": 2, "type": "navigation", "success": True, "duration": 30.0, "failure_reason": None},
-            {"trial_id": 3, "type": "navigation", "success": False, "duration": 60.0, "failure_reason": "Timeout"},
+            {
+                "trial_id": 1,
+                "type": "navigation",
+                "success": True,
+                "duration": 20.0,
+                "failure_reason": None,
+            },
+            {
+                "trial_id": 2,
+                "type": "navigation",
+                "success": True,
+                "duration": 30.0,
+                "failure_reason": None,
+            },
+            {
+                "trial_id": 3,
+                "type": "navigation",
+                "success": False,
+                "duration": 60.0,
+                "failure_reason": "Timeout",
+            },
         ]
         with open(trials_path, "w") as f:
             for t in sample_trials:

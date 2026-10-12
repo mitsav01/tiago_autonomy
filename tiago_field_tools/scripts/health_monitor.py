@@ -19,8 +19,16 @@ import rclpy
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from rclpy.parameter import Parameter
-from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
-from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
+from rclpy.qos import (
+    QoSDurabilityPolicy,
+    QoSHistoryPolicy,
+    QoSProfile,
+    QoSReliabilityPolicy,
+)
+from ament_index_python.packages import (
+    get_package_share_directory,
+    PackageNotFoundError,
+)
 from nav2_msgs.action import NavigateToPose
 
 
@@ -38,8 +46,10 @@ def get_default_config_path() -> str:
     except PackageNotFoundError:
         pass
 
-    # Source tree fallback: 
-    src_relative_path = Path(__file__).resolve().parent.parent / "config" / "acceptance_tests.yaml"
+    # Source tree fallback:
+    src_relative_path = (
+        Path(__file__).resolve().parent.parent / "config" / "acceptance_tests.yaml"
+    )
     if src_relative_path.is_file():
         return str(src_relative_path)
 
@@ -51,27 +61,33 @@ def get_default_config_path() -> str:
 
 class HealthMonitor(Node):
     def __init__(self, config_path: str, sim_time_override: bool = None):
-        super().__init__('health_monitor')
+        super().__init__("health_monitor")
 
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Config path does not exist: {config_path}")
 
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             self.cfg = yaml.safe_load(f)
 
         # Configure simulation time safely without re-declaring built-in parameter in Jazzy
-        if not self.has_parameter('use_sim_time'):
-            self.declare_parameter('use_sim_time', False)
+        if not self.has_parameter("use_sim_time"):
+            self.declare_parameter("use_sim_time", False)
 
         if sim_time_override is not None:
-            self.set_parameters([Parameter('use_sim_time', Parameter.Type.BOOL, sim_time_override)])
+            self.set_parameters(
+                [Parameter("use_sim_time", Parameter.Type.BOOL, sim_time_override)]
+            )
         else:
             # Auto-detect Gazebo clock if not explicitly configured via ROS args
             active_topics = [t[0] for t in self.get_topic_names_and_types()]
-            if '/clock' in active_topics:
-                self.set_parameters([Parameter('use_sim_time', Parameter.Type.BOOL, True)])
+            if "/clock" in active_topics:
+                self.set_parameters(
+                    [Parameter("use_sim_time", Parameter.Type.BOOL, True)]
+                )
 
-        self.stale_timeout = float(self.cfg.get('monitoring', {}).get('topic_stale_timeout_seconds', 2.0))
+        self.stale_timeout = float(
+            self.cfg.get("monitoring", {}).get("topic_stale_timeout_seconds", 2.0)
+        )
         self.failed_checks = []
         self.degraded_checks = []
         self.metrics_snapshot = {}
@@ -79,20 +95,22 @@ class HealthMonitor(Node):
     def check_system_resources(self):
         cpu = psutil.cpu_percent(interval=0.2)
         mem = psutil.virtual_memory().percent
-        disk = psutil.disk_usage('/').free / (1024 ** 3)
+        disk = psutil.disk_usage("/").free / (1024**3)
 
-        self.metrics_snapshot['cpu_percent'] = cpu
-        self.metrics_snapshot['ram_percent'] = mem
-        self.metrics_snapshot['disk_free_gb'] = round(disk, 2)
+        self.metrics_snapshot["cpu_percent"] = cpu
+        self.metrics_snapshot["ram_percent"] = mem
+        self.metrics_snapshot["disk_free_gb"] = round(disk, 2)
 
-        monitoring_cfg = self.cfg.get('monitoring', {})
-        min_disk_gb = float(monitoring_cfg.get('min_disk_free_gb', 1.0))
-        max_ram_pct = float(monitoring_cfg.get('max_ram_percent', 95.0))
-        warn_ram_pct = float(monitoring_cfg.get('warn_ram_percent', 85.0))
-        max_cpu_pct = float(monitoring_cfg.get('max_cpu_percent', 95.0))
+        monitoring_cfg = self.cfg.get("monitoring", {})
+        min_disk_gb = float(monitoring_cfg.get("min_disk_free_gb", 1.0))
+        max_ram_pct = float(monitoring_cfg.get("max_ram_percent", 95.0))
+        warn_ram_pct = float(monitoring_cfg.get("warn_ram_percent", 85.0))
+        max_cpu_pct = float(monitoring_cfg.get("max_cpu_percent", 95.0))
 
         if mem > max_ram_pct:
-            self.failed_checks.append(f"RAM critical: {mem:.1f}% used (>{max_ram_pct}% limit)")
+            self.failed_checks.append(
+                f"RAM critical: {mem:.1f}% used (>{max_ram_pct}% limit)"
+            )
         elif mem > warn_ram_pct:
             self.degraded_checks.append(f"RAM elevated: {mem:.1f}% used")
 
@@ -100,10 +118,12 @@ class HealthMonitor(Node):
             self.degraded_checks.append(f"CPU load critical: {cpu:.1f}%")
 
         if disk < min_disk_gb:
-            self.failed_checks.append(f"Disk space dangerously low: {disk:.1f} GB free (<{min_disk_gb} GB)")
+            self.failed_checks.append(
+                f"Disk space dangerously low: {disk:.1f} GB free (<{min_disk_gb} GB)"
+            )
 
     def check_nodes(self):
-        required = self.cfg.get('monitoring', {}).get('required_nodes', [])
+        required = self.cfg.get("monitoring", {}).get("required_nodes", [])
         if not required:
             return
 
@@ -111,16 +131,17 @@ class HealthMonitor(Node):
         discovered_nodes = set()
         for _ in range(3):
             for n in self.get_node_names():
-                discovered_nodes.add(n.lstrip('/'))
+                discovered_nodes.add(n.lstrip("/"))
             rclpy.spin_once(self, timeout_sec=0.1)
 
-        self.metrics_snapshot['active_nodes_count'] = len(discovered_nodes)
+        self.metrics_snapshot["active_nodes_count"] = len(discovered_nodes)
 
         for req in required:
-            clean_req = req.lstrip('/')
+            clean_req = req.lstrip("/")
             # Accept either /controller_manager or Gazebo plugin /gz_ros_control
-            if clean_req == 'controller_manager' and (
-                'gz_ros_control' in discovered_nodes or 'controller_manager' in discovered_nodes
+            if clean_req == "controller_manager" and (
+                "gz_ros_control" in discovered_nodes
+                or "controller_manager" in discovered_nodes
             ):
                 continue
             if clean_req not in discovered_nodes:
@@ -128,7 +149,7 @@ class HealthMonitor(Node):
 
     def _resolve_msg_type(self, type_str: str):
         try:
-            mod_name, cls_name = type_str.replace('/', '.').rsplit('.', 1)
+            mod_name, cls_name = type_str.replace("/", ".").rsplit(".", 1)
             module = importlib.import_module(mod_name)
             return getattr(module, cls_name)
         except Exception:
@@ -136,18 +157,21 @@ class HealthMonitor(Node):
 
     def check_topic_health(self):
         sample_time = 1.2
-        required_topics = self.cfg.get('monitoring', {}).get('required_topics', [])
+        required_topics = self.cfg.get("monitoring", {}).get("required_topics", [])
         topic_types = dict(self.get_topic_names_and_types())
 
-        self.metrics_snapshot['topics'] = {}
+        self.metrics_snapshot["topics"] = {}
 
         for t_info in required_topics:
-            topic = t_info['name']
-            min_hz = float(t_info.get('min_hz', 1.0))
+            topic = t_info["name"]
+            min_hz = float(t_info.get("min_hz", 1.0))
 
             if topic not in topic_types or not topic_types[topic]:
                 self.failed_checks.append(f"Topic not published: {topic}")
-                self.metrics_snapshot['topics'][topic] = {"hz": 0.0, "status": "NOT_PUBLISHED"}
+                self.metrics_snapshot["topics"][topic] = {
+                    "hz": 0.0,
+                    "status": "NOT_PUBLISHED",
+                }
                 continue
 
             msg_cls = self._resolve_msg_type(topic_types[topic][0])
@@ -161,7 +185,7 @@ class HealthMonitor(Node):
             def cb(msg):
                 now_wall = time.time()
                 received_timestamps.append(now_wall)
-                if hasattr(msg, 'header') and hasattr(msg.header, 'stamp'):
+                if hasattr(msg, "header") and hasattr(msg.header, "stamp"):
                     stamp_sec = msg.header.stamp.sec + (msg.header.stamp.nanosec * 1e-9)
                     header_stamps.append(stamp_sec)
 
@@ -169,7 +193,7 @@ class HealthMonitor(Node):
                 history=QoSHistoryPolicy.KEEP_LAST,
                 depth=10,
                 reliability=QoSReliabilityPolicy.BEST_EFFORT,
-                durability=QoSDurabilityPolicy.VOLATILE
+                durability=QoSDurabilityPolicy.VOLATILE,
             )
 
             sub = self.create_subscription(msg_cls, topic, cb, qos)
@@ -180,18 +204,18 @@ class HealthMonitor(Node):
 
             count = len(received_timestamps)
             actual_hz = count / sample_time
-            self.metrics_snapshot['topics'][topic] = {"hz": round(actual_hz, 1)}
+            self.metrics_snapshot["topics"][topic] = {"hz": round(actual_hz, 1)}
 
             if count == 0:
                 self.failed_checks.append(f"Topic dead (0 Hz): {topic}")
-                self.metrics_snapshot['topics'][topic]["status"] = "DEAD"
+                self.metrics_snapshot["topics"][topic]["status"] = "DEAD"
             elif actual_hz < min_hz:
                 self.degraded_checks.append(
                     f"Topic degraded: {topic} at {actual_hz:.1f} Hz (<{min_hz} Hz expected)"
                 )
-                self.metrics_snapshot['topics'][topic]["status"] = "DEGRADED"
+                self.metrics_snapshot["topics"][topic]["status"] = "DEGRADED"
             else:
-                self.metrics_snapshot['topics'][topic]["status"] = "HEALTHY"
+                self.metrics_snapshot["topics"][topic]["status"] = "HEALTHY"
                 if header_stamps:
                     now_ros_sec = self.get_clock().now().nanoseconds * 1e-9
                     latest_stamp = max(header_stamps)
@@ -202,10 +226,12 @@ class HealthMonitor(Node):
                         )
 
     def check_action_servers(self):
-        nav_action = self.cfg.get('navigation', {}).get('action_server', '/navigate_to_pose')
+        nav_action = self.cfg.get("navigation", {}).get(
+            "action_server", "/navigate_to_pose"
+        )
         client = ActionClient(self, NavigateToPose, nav_action)
         is_ready = client.wait_for_server(timeout_sec=2.0)
-        self.metrics_snapshot['nav_action_ready'] = is_ready
+        self.metrics_snapshot["nav_action_ready"] = is_ready
 
         if not is_ready:
             self.failed_checks.append(f"Action server offline: {nav_action}")
@@ -262,48 +288,68 @@ def print_dashboard(res: dict):
     BOLD = "\033[1m"
     RESET = "\033[0m"
 
-    status = res['status']
+    status = res["status"]
     color = GREEN if status == "READY" else (YELLOW if status == "DEGRADED" else RED)
 
     print(f"\n{BOLD}===================================================={RESET}")
     print(f"{BOLD}   TIAGo SYSTEM HEALTH STATUS: {color}{status}{RESET}")
     print(f"{BOLD}===================================================={RESET}")
 
-    metrics = res.get('metrics', {})
-    if 'cpu_percent' in metrics:
-        print(f"Host: CPU {metrics['cpu_percent']}% | RAM {metrics['ram_percent']}% | Disk Free {metrics['disk_free_gb']} GB")
-    if 'active_nodes_count' in metrics:
+    metrics = res.get("metrics", {})
+    if "cpu_percent" in metrics:
+        print(
+            f"Host: CPU {metrics['cpu_percent']}% | RAM {metrics['ram_percent']}% | Disk Free {metrics['disk_free_gb']} GB"
+        )
+    if "active_nodes_count" in metrics:
         print(f"Graph: {metrics['active_nodes_count']} Active Nodes Discovered")
 
-    if 'topics' in metrics:
+    if "topics" in metrics:
         print(f"\n{BOLD}Monitored Topics:{RESET}")
-        for t, data in metrics['topics'].items():
-            t_status = data.get('status', 'OK')
-            t_col = GREEN if t_status == "HEALTHY" else (YELLOW if t_status == "DEGRADED" else RED)
+        for t, data in metrics["topics"].items():
+            t_status = data.get("status", "OK")
+            t_col = (
+                GREEN
+                if t_status == "HEALTHY"
+                else (YELLOW if t_status == "DEGRADED" else RED)
+            )
             print(f"  {t_col}[{t_status:<9}]{RESET} {t:<35} : {data.get('hz', 0.0)} Hz")
 
-    if res['failed_checks']:
+    if res["failed_checks"]:
         print(f"\n{BOLD}{RED}Critical Failures:{RESET}")
-        for err in res['failed_checks']:
+        for err in res["failed_checks"]:
             print(f"  {RED}[FAIL]{RESET} {err}")
 
-    if res['degraded_checks']:
+    if res["degraded_checks"]:
         print(f"\n{BOLD}{YELLOW}Operational Warnings:{RESET}")
-        for warn in res['degraded_checks']:
+        for warn in res["degraded_checks"]:
             print(f"  {YELLOW}[WARN]{RESET} {warn}")
 
-    if not res['failed_checks'] and not res['degraded_checks']:
-        print(f"\n{GREEN}[OK] All systems, frequencies, and action servers are nominal.{RESET}")
+    if not res["failed_checks"] and not res["degraded_checks"]:
+        print(
+            f"\n{GREEN}[OK] All systems, frequencies, and action servers are nominal.{RESET}"
+        )
     print("----------------------------------------------------\n")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="TIAGo Field Pre-flight Health Monitor")
-    parser.add_argument("--config", type=str, default=None, help="Custom acceptance_tests.yaml path")
+    parser = argparse.ArgumentParser(
+        description="TIAGo Field Pre-flight Health Monitor"
+    )
+    parser.add_argument(
+        "--config", type=str, default=None, help="Custom acceptance_tests.yaml path"
+    )
     parser.add_argument("--sim", action="store_true", help="Force use_sim_time:=true")
-    parser.add_argument("--json", action="store_true", help="Output machine-readable JSON only")
-    parser.add_argument("--loop", type=float, default=None, help="Run continuously every N seconds")
-    parser.add_argument("--watch", action="store_true", help="Run continuously every 2.0 seconds with screen clear")
+    parser.add_argument(
+        "--json", action="store_true", help="Output machine-readable JSON only"
+    )
+    parser.add_argument(
+        "--loop", type=float, default=None, help="Run continuously every N seconds"
+    )
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Run continuously every 2.0 seconds with screen clear",
+    )
     args, _ = parser.parse_known_args()
 
     loop_interval = 2.0 if args.watch else args.loop
@@ -313,7 +359,9 @@ def main():
             if args.watch:
                 print("\033[H\033[J", end="")
 
-            res = evaluate_readiness(config_path=args.config, sim_time=True if args.sim else None)
+            res = evaluate_readiness(
+                config_path=args.config, sim_time=True if args.sim else None
+            )
 
             if args.json:
                 print(json.dumps(res, indent=2))
@@ -321,7 +369,7 @@ def main():
                 print_dashboard(res)
 
             if loop_interval is None:
-                sys.exit(0 if res['status'] == "READY" else 1)
+                sys.exit(0 if res["status"] == "READY" else 1)
 
             time.sleep(loop_interval)
 
@@ -330,5 +378,5 @@ def main():
         sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

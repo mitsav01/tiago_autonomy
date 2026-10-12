@@ -14,7 +14,10 @@ import time
 import yaml
 
 from action_msgs.msg import GoalStatus
-from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
+from ament_index_python.packages import (
+    get_package_share_directory,
+    PackageNotFoundError,
+)
 from geometry_msgs.msg import PoseStamped
 from nav2_msgs.action import NavigateToPose
 import rclpy
@@ -39,7 +42,9 @@ def get_default_config_path() -> str:
     except PackageNotFoundError:
         pass
 
-    src_relative_path = Path(__file__).resolve().parent.parent / "config" / "acceptance_tests.yaml"
+    src_relative_path = (
+        Path(__file__).resolve().parent.parent / "config" / "acceptance_tests.yaml"
+    )
     if src_relative_path.is_file():
         return str(src_relative_path)
 
@@ -48,28 +53,36 @@ def get_default_config_path() -> str:
 
 class TestRunnerNode(Node):
     def __init__(self, config_path: str):
-        super().__init__('tiago_test_runner')
+        super().__init__("tiago_test_runner")
 
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             self.cfg = yaml.safe_load(f)
 
         self.config_path = config_path
 
         # 1. Parameter management for simulation time
-        if not self.has_parameter('use_sim_time'):
-            self.declare_parameter('use_sim_time', False)
+        if not self.has_parameter("use_sim_time"):
+            self.declare_parameter("use_sim_time", False)
 
         active_topics = [t[0] for t in self.get_topic_names_and_types()]
-        self.is_sim_time = self.get_parameter('use_sim_time').value or ('/clock' in active_topics)
+        self.is_sim_time = self.get_parameter("use_sim_time").value or (
+            "/clock" in active_topics
+        )
         if self.is_sim_time:
-            self.set_parameters([Parameter('use_sim_time', Parameter.Type.BOOL, True)])
+            self.set_parameters([Parameter("use_sim_time", Parameter.Type.BOOL, True)])
 
         # 2. Action Client setup
-        self.nav_action_name = self.cfg.get('navigation', {}).get('action_server', '/navigate_to_pose')
+        self.nav_action_name = self.cfg.get("navigation", {}).get(
+            "action_server", "/navigate_to_pose"
+        )
         self.nav_client = ActionClient(self, NavigateToPose, self.nav_action_name)
 
         # 3. Output directory setup
-        self.output_dir = Path(self.cfg.get('test_suite', {}).get('output_dir', '/tmp/tiago_validation_results'))
+        self.output_dir = Path(
+            self.cfg.get("test_suite", {}).get(
+                "output_dir", "/tmp/tiago_validation_results"
+            )
+        )
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.trials_file = self.output_dir / "raw_trials.jsonl"
 
@@ -91,14 +104,18 @@ class TestRunnerNode(Node):
         record["pre_check"] = pre_check
 
         if pre_check.get("status") == "NOT_READY":
-            record["failure_reason"] = f"Pre-check failed: {', '.join(pre_check.get('failed_checks', []))}"
+            record["failure_reason"] = (
+                f"Pre-check failed: {', '.join(pre_check.get('failed_checks', []))}"
+            )
             record["end_time"] = time.time()
             record["duration"] = 0.0
             return record
 
         # Step 2: Ensure Action Server is reachable
         if not self.nav_client.wait_for_server(timeout_sec=4.0):
-            record["failure_reason"] = f"Action server '{self.nav_action_name}' offline or unresponsive"
+            record["failure_reason"] = (
+                f"Action server '{self.nav_action_name}' offline or unresponsive"
+            )
             record["end_time"] = time.time()
             record["duration"] = 0.0
             return record
@@ -107,9 +124,9 @@ class TestRunnerNode(Node):
         goal_msg = NavigateToPose.Goal()
         goal_msg.pose.header.frame_id = "map"
         goal_msg.pose.header.stamp = self.get_clock().now().to_msg()
-        goal_msg.pose.pose.position.x = float(goal_def['x'])
-        goal_msg.pose.pose.position.y = float(goal_def['y'])
-        yaw = float(goal_def.get('yaw', 0.0))
+        goal_msg.pose.pose.position.x = float(goal_def["x"])
+        goal_msg.pose.pose.position.y = float(goal_def["y"])
+        yaw = float(goal_def.get("yaw", 0.0))
         goal_msg.pose.pose.orientation.z = math.sin(yaw / 2.0)
         goal_msg.pose.pose.orientation.w = math.cos(yaw / 2.0)
 
@@ -125,7 +142,7 @@ class TestRunnerNode(Node):
             return record
 
         # Step 4: Monitor goal execution with timeout guard
-        timeout = float(self.cfg.get('navigation', {}).get('timeout_seconds', 120.0))
+        timeout = float(self.cfg.get("navigation", {}).get("timeout_seconds", 120.0))
         result_future = goal_handle.get_result_async()
 
         while not result_future.done():
@@ -144,31 +161,47 @@ class TestRunnerNode(Node):
         if action_result.status == GoalStatus.STATUS_SUCCEEDED:
             record["success"] = True
         elif action_result.status == GoalStatus.STATUS_ABORTED:
-            record["failure_reason"] = "Nav2 aborted goal (path planning failure or costmap lethal collision)"
+            record["failure_reason"] = (
+                "Nav2 aborted goal (path planning failure or costmap lethal collision)"
+            )
         elif action_result.status == GoalStatus.STATUS_CANCELED:
             record["failure_reason"] = "Nav2 goal was canceled"
         else:
-            record["failure_reason"] = f"Nav2 returned status code {action_result.status}"
+            record["failure_reason"] = (
+                f"Nav2 returned status code {action_result.status}"
+            )
 
         return record
 
     def run_suite(self):
-        goals = self.cfg.get('navigation', {}).get('goals', [{'x': 1.0, 'y': 0.0, 'yaw': 0.0}])
-        repetitions = int(self.cfg.get('test_suite', {}).get('repetitions', 5))
+        goals = self.cfg.get("navigation", {}).get(
+            "goals", [{"x": 1.0, "y": 0.0, "yaw": 0.0}]
+        )
+        repetitions = int(self.cfg.get("test_suite", {}).get("repetitions", 5))
 
         print("\n==========================================")
         print(f" Starting Acceptance Test Suite ({repetitions} Trials)")
         print(f" Target File: {self.trials_file}")
         print("==========================================\n")
 
-        with open(self.trials_file, 'w') as f_out:
+        with open(self.trials_file, "w") as f_out:
             for i in range(repetitions):
                 goal = goals[i % len(goals)]
-                print(f"Trial {i + 1}/{repetitions} -> Goal: x={goal['x']}, y={goal['y']}, yaw={goal.get('yaw', 0.0)}")
+                print(
+                    f"Trial {i + 1}/{repetitions} -> Goal: x={goal['x']}, y={goal['y']}, yaw={goal.get('yaw', 0.0)}"
+                )
 
                 result = self.execute_nav_trial(i + 1, goal)
-                status_str = "\033[92mSUCCESS\033[0m" if result['success'] else f"\033[91mFAILED\033[0m ({result['failure_reason']})"
-                dur_str = f"{result['duration']}s" if result['duration'] is not None else "N/A"
+                status_str = (
+                    "\033[92mSUCCESS\033[0m"
+                    if result["success"]
+                    else f"\033[91mFAILED\033[0m ({result['failure_reason']})"
+                )
+                dur_str = (
+                    f"{result['duration']}s"
+                    if result["duration"] is not None
+                    else "N/A"
+                )
                 print(f"  Result: {status_str} | Duration: {dur_str}\n")
 
                 f_out.write(json.dumps(result) + "\n")
@@ -188,5 +221,5 @@ def main():
         rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
