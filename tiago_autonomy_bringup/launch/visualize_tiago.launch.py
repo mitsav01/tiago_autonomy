@@ -14,9 +14,9 @@ from launch_ros.descriptions import ParameterValue
 def generate_launch_description():
 
     tiago_description_file = os.path.join(
-        get_package_share_directory("tiago_autonomy_bringup"),
+        get_package_share_directory("iai_refills_lab"),
         "urdf",
-        "tiago_autonomy.urdf",
+        "dm_room.urdf.xacrof",
     )
 
     robot_description = Command(

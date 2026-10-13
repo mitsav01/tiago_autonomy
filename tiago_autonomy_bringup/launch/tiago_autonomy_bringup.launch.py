@@ -17,6 +17,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
 
     tiago_bringup_pkg = get_package_share_directory("tiago_autonomy_bringup")
+    iai_lab_pkg = get_package_share_directory("iai_refills_lab")
 
     required_packages = [
         "tiago_autonomy_bringup",
@@ -45,7 +46,7 @@ def generate_launch_description():
         name="GZ_SIM_RESOURCE_PATH", value=":".join(gz_paths)
     )
 
-    world_file = os.path.join(tiago_bringup_pkg, "urdf", "apartment_gazebo.sdf")
+    world_file = os.path.join(iai_lab_pkg, "urdf", "dm_room.urdf.xacro")
     robot_file = os.path.join(tiago_bringup_pkg, "urdf", "tiago_autonomy.urdf")
     rviz_config = os.path.join(tiago_bringup_pkg, "rviz2", "rviz_config.rviz")
 
