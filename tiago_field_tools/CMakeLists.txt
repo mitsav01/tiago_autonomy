@@ -9,6 +9,7 @@ install(PROGRAMS
   scripts/test_runner.py
   scripts/metrics_collector.py
   scripts/report_generator.py
+  scripts/jitter_benchmark.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

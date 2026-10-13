@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: rostooling/setup-ros-docker:ubuntu-noble-latest
+      image: rostooling/setup-ros-docker:ubuntu-jazzy-latest
 
     steps:
       - name: Checkout repository
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: rostooling/setup-ros-docker:ubuntu-noble-latest
+      image: rostooling/setup-ros-docker:ubuntu-jazzy-latest
 
     steps:
       - name: Checkout repository
@@ -74,6 +74,8 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends \
             ros-jazzy-xacro \
+            ros-jazzy-ros2run \
+            ros-jazzy-ros2cli \
             python3-psutil \
             python3-yaml \
             python3-numpy \
@@ -102,11 +104,12 @@ jobs:
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
 
           set +u
-          [ -f "/opt/ros/jazzy/setup.sh" ] && . "/opt/ros/jazzy/setup.sh"
-          [ -f "${WS_DIR}/install/setup.sh" ] && . "${WS_DIR}/install/setup.sh"
+          [ -f "/opt/ros/jazzy/setup.bash" ] && . "/opt/ros/jazzy/setup.bash"
+          [ -f "${WS_DIR}/install/setup.bash" ] && . "${WS_DIR}/install/setup.bash"
           set -u
 
-          python3 -m pytest -v "${WS_DIR}/src"/**/tiago_field_tools/tests/test_schema_and_metrics.py || true
+          python3 -m pytest -v "${WS_DIR}/src"/*/tiago_field_tools/tests || \
+          python3 -m pytest -v --pyargs tiago_field_tools || true
 
       # =========================================================================
       # STAGE 2: Health Audit on Raw Graph (Verifies Failure Detection)
@@ -137,18 +140,29 @@ jobs:
 
           mkdir -p /tmp/tiago_validation_results
 
-          # Verify ros2 executable exists before running
-          which ros2
-
           echo "Verifying health_monitor catches missing nodes cleanly..."
-          ros2 run tiago_field_tools health_monitor.py --json > /tmp/tiago_validation_results/preflight_empty.json
-          EXIT_CODE=$?
+          EXIT_CODE=0
 
-          if [ $EXIT_CODE -ne 1 ]; then
+          if ros2 --help 2>&1 | grep -qw "run"; then
+            # Preferred entrypoint execution (omitting .py extension)
+            ros2 run tiago_field_tools health_monitor --json > /tmp/tiago_validation_results/preflight_empty.json 2>&1 || EXIT_CODE=$?
+          else
+            # Module execution fallback if ros2run entry points fail to bind
+            python3 -m tiago_field_tools.health_monitor --json > /tmp/tiago_validation_results/preflight_empty.json 2>&1 || EXIT_CODE=$?
+          fi
+
+          if [ "$EXIT_CODE" -ne 1 ]; then
             echo "Health monitor failed to catch missing nodes (expected code 1, got $EXIT_CODE)"
+            cat /tmp/tiago_validation_results/preflight_empty.json
             exit 1
           fi
-          grep -q '"status": "NOT_READY"' /tmp/tiago_validation_results/preflight_empty.json
+
+          if ! grep -q '"status": "NOT_READY"' /tmp/tiago_validation_results/preflight_empty.json; then
+            echo "Expected '\"status\": \"NOT_READY\"' in output, but got:"
+            cat /tmp/tiago_validation_results/preflight_empty.json
+            exit 1
+          fi
+
           echo "Health monitor verified: correctly flagged NOT_READY on idle graph."
 
       # =========================================================================
@@ -162,12 +176,13 @@ jobs:
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
 
           set +u
-          [ -f "/opt/ros/jazzy/setup.sh" ] && . "/opt/ros/jazzy/setup.sh"
-          [ -f "${WS_DIR}/install/setup.sh" ] && . "${WS_DIR}/install/setup.sh"
+          [ -f "/opt/ros/jazzy/setup.bash" ] && . "/opt/ros/jazzy/setup.bash"
+          [ -f "${WS_DIR}/install/setup.bash" ] && . "${WS_DIR}/install/setup.bash"
           set -u
 
           echo "Running headless validation suite..."
-          ros2 run tiago_field_tools test_runner.py --ros-args -p use_sim_time:=true || true
+          ros2 run tiago_field_tools test_runner --ros-args -p use_sim_time:=true || \
+          python3 -m tiago_field_tools.test_runner --ros-args -p use_sim_time:=true || true
 
       # =========================================================================
       # STAGE 4: Aggregate Metrics & Archive SAT Report
@@ -180,17 +195,16 @@ jobs:
           WS_DIR="${{ steps.ros_ci.outputs.ros-workspace-directory-name }}"
 
           set +u
-          [ -f "/opt/ros/jazzy/setup.sh" ] && . "/opt/ros/jazzy/setup.sh"
-          [ -f "${WS_DIR}/install/setup.sh" ] && . "${WS_DIR}/install/setup.sh"
+          [ -f "/opt/ros/jazzy/setup.bash" ] && . "/opt/ros/jazzy/setup.bash"
+          [ -f "${WS_DIR}/install/setup.bash" ] && . "${WS_DIR}/install/setup.bash"
           set -u
 
           mkdir -p /tmp/tiago_validation_results
 
-          # If no live trials ran (Stage 3 skipped), run synthetic metric compilation
-          ros2 run tiago_field_tools metrics_collector.py 2>/dev/null || true
-          ros2 run tiago_field_tools report_generator.py 2>/dev/null || true
+          # Run metric collector and report generator (using module fallback if needed)
+          (ros2 run tiago_field_tools metrics_collector 2>/dev/null || python3 -m tiago_field_tools.metrics_collector 2>/dev/null) || true
+          (ros2 run tiago_field_tools report_generator 2>/dev/null || python3 -m tiago_field_tools.report_generator 2>/dev/null) || true
 
-          # If report was created, output to GitHub Job Summary
           if [ -f /tmp/tiago_validation_results/acceptance_report.md ]; then
             cat /tmp/tiago_validation_results/acceptance_report.md >> $GITHUB_STEP_SUMMARY
           fi
