@@ -15,7 +15,7 @@ A ROS 2 robotics portfolio project focused on autonomous navigation, motion plan
 
 <p align="center">
   <video
-    src="media/tiago_autonomy_demo.mp4"
+    src="https://github.com/mitsav01/tiago_autonomy/issues/1#issue-6354069843"
     autoplay
     loop
     muted
