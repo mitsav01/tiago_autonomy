@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: tiago_autonomy_bringup
+    relative_path: urdf/tiago_autonomy.urdf
+  srdf:
+    relative_path: config/tiago_dual.srdf
+  package_settings:
+    author_name: Mitesh Savsaviya
+    author_email: miteshsavsaviya@gmail.com
+    generated_timestamp: 1793713832
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

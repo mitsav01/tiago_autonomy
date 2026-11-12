@@ -3,6 +3,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
+    AppendEnvironmentVariable,
     IncludeLaunchDescription,
     RegisterEventHandler,
     SetEnvironmentVariable,
@@ -17,7 +18,6 @@ from launch_ros.actions import Node
 def generate_launch_description():
 
     tiago_bringup_pkg = get_package_share_directory("tiago_autonomy_bringup")
-    iai_lab_pkg = get_package_share_directory("iai_refills_lab")
 
     required_packages = [
         "tiago_autonomy_bringup",
@@ -27,6 +27,7 @@ def generate_launch_description():
         "tiago_dual_description",
         "pal_robotiq_description",
         "pal_urdf_utils",
+        "iai_refills_lab",
     ]
 
     gz_paths = []
@@ -42,11 +43,17 @@ def generate_launch_description():
     if old_path:
         gz_paths.append(old_path)
 
+    resource_path_str = ":".join(dict.fromkeys(gz_paths))
+
     gz_resource_path = SetEnvironmentVariable(
-        name="GZ_SIM_RESOURCE_PATH", value=":".join(gz_paths)
+        name="GZ_SIM_RESOURCE_PATH", value=resource_path_str
+    )
+    gz_file_path = SetEnvironmentVariable(
+        name="GZ_FILE_PATH", value=resource_path_str
     )
 
-    world_file = os.path.join(iai_lab_pkg, "urdf", "dm_room.urdf.xacro")
+    # Use the verified dm_room.sdf
+    world_file = os.path.join(tiago_bringup_pkg, "urdf", "dm_room.sdf")
     robot_file = os.path.join(tiago_bringup_pkg, "urdf", "tiago_autonomy.urdf")
     rviz_config = os.path.join(tiago_bringup_pkg, "rviz2", "rviz_config.rviz")
 
@@ -73,18 +80,27 @@ def generate_launch_description():
         package="ros_gz_sim",
         executable="create",
         arguments=[
+            "-world",
+            "retail_world",
             "-name",
             "tiago_dual",
             "-string",
             robot_description,
             "-x",
-            "5.0",
+            "1.9",
             "-y",
-            "2.0",
+            "-0.6",
             "-z",
             "0.05",
+            "-Y",
+            "-1.57"
         ],
         output="screen",
+    )
+
+    delay_spawn_robot = TimerAction(
+        period=5.0,
+        actions=[spawn_robot],
     )
 
     gz_bridge = Node(
@@ -120,7 +136,6 @@ def generate_launch_description():
         output="screen",
     )
 
-    # 2. Base & Body Trajectory Controllers
     spawn_motion_controllers = Node(
         package="controller_manager",
         executable="spawner",
@@ -146,7 +161,7 @@ def generate_launch_description():
             target_action=spawn_robot,
             on_exit=[
                 TimerAction(
-                    period=4.0,
+                    period=3.0,
                     actions=[joint_state_broadcaster_spawner],
                 )
             ],
@@ -171,12 +186,13 @@ def generate_launch_description():
     return LaunchDescription(
         [
             gz_resource_path,
+            gz_file_path,
             gz_sim_launch,
             robot_state_publisher,
-            spawn_robot,
+            delay_spawn_robot,
             gz_bridge,
             delay_joint_state_broadcaster,
             delay_motion_controllers,
-            rviz_node,
+            #rviz_node,
         ]
     )

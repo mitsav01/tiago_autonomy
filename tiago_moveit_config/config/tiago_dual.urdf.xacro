@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="tiago_dual">
+    <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
+
+    <!-- Import tiago_dual urdf file -->
+    <xacro:include filename="$(find tiago_autonomy_bringup)/urdf/tiago_autonomy.urdf" />
+
+    <!-- Import control_xacro -->
+    <xacro:include filename="tiago_dual.ros2_control.xacro" />
+
+
+    <xacro:tiago_dual_ros2_control name="FakeSystem" initial_positions_file="$(arg initial_positions_file)"/>
+
+</robot>

@@ -1,0 +1,50 @@
+trajectory_execution:
+  control_multi_dof_joint_variables: true
+  execution_duration_monitoring: false
+  allowed_execution_duration_scaling: 3.0
+  allowed_goal_duration_margin: 10.0
+
+moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
+
+moveit_simple_controller_manager:
+  controller_names:
+    - arm_right_controller
+    - torso_controller
+    - right_robotiq_gripper_controller
+    - base_controller
+
+  base_controller:
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - virtual_joint/x
+      - virtual_joint/y
+      - virtual_joint/theta
+
+  arm_right_controller:
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - arm_right_1_joint
+      - arm_right_2_joint
+      - arm_right_3_joint
+      - arm_right_4_joint
+      - arm_right_5_joint
+      - arm_right_6_joint
+      - arm_right_7_joint
+
+  torso_controller:
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - torso_lift_joint
+
+  right_robotiq_gripper_controller:
+    action_ns: gripper_action
+    type: GripperCommand
+    default: true
+    joints:
+      - gripper_right_finger_joint

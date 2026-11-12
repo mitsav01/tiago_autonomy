@@ -16,7 +16,7 @@ def generate_launch_description():
     tiago_description_file = os.path.join(
         get_package_share_directory("iai_refills_lab"),
         "urdf",
-        "dm_room.urdf.xacrof",
+        "dm_room.urdf.xacro",
     )
 
     robot_description = Command(
