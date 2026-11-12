@@ -8,6 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(iai_refills_lab REQUIRED)
+find_package(trajectory_msgs REQUIRED)
 
 # Install configuration, asset, and launch directories
 install(DIRECTORY launch rviz2 urdf config

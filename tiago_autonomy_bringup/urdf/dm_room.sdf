@@ -27044,7 +27044,49 @@
         <pose>0 0 0 0 0 0</pose>
       </frame>
     </model>
-  
+
+    <model name="balea_bottle_dynamic">
+      <static>false</static>
+      <pose>1.836227 -1.313747 1.04915 0 0 -1.615869</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.35</mass>
+          <inertia>
+            <ixx>0.001</ixx><iyy>0.001</iyy><izz>0.0005</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <!-- Primitive cylinder collision eliminates ODE trimesh-trimesh overflow -->
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.032</radius>
+              <length>0.16</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode><mu>1.5</mu><mu2>1.5</mu2></ode>
+            </friction>
+            <contact>
+              <ode>
+                <kp>100000.0</kp>
+                <kd>100.0</kd>
+                <max_vel>0.01</max_vel>
+                <min_depth>0.001</min_depth>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>/home/mitesh/ros_ws/src/iai_maps/iai_refills_lab/resources/meshes/balea-bottle.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
     <!-- Standalone Dynamic Target for Pick and Place -->
     <include>
       <name>target_denkmit_bottle</name>

@@ -31,14 +31,12 @@ controller_manager:
     arm_right_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
-    # Direct 1 kHz JointTrajectoryPoint streamers (Orocos RTT bridge)
     arm_left_point_controller:
       type: tiago_joint_point_controllers/JointPointCommandController
 
     arm_right_point_controller:
       type: tiago_joint_point_controllers/JointPointCommandController
 
-    # End-effector controllers
     left_robotiq_gripper_controller:
       type: parallel_gripper_action_controller/GripperActionController
 
@@ -86,6 +84,7 @@ torso_controller:
       torso_lift_joint: {p: 0.0, i: 0.0, d: 0.0}
 
     interpolate_from_desired_state: true
+    allow_nonzero_velocity_at_trajectory_end: true
 
     constraints:
       goal_time: 0.6
@@ -162,6 +161,7 @@ arm_left_controller:
       arm_left_7_joint: {p: 0.0, i: 0.0, d: 0.0}
 
     interpolate_from_desired_state: true
+    allow_nonzero_velocity_at_trajectory_end: true
 
     constraints:
       goal_time: 0.6
@@ -199,6 +199,7 @@ arm_right_controller:
       arm_right_7_joint: {p: 0.0, i: 0.0, d: 0.0}
 
     interpolate_from_desired_state: true
+    allow_nonzero_velocity_at_trajectory_end: true
 
     constraints:
       goal_time: 0.6

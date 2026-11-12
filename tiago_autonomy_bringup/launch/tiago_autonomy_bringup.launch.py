@@ -3,7 +3,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
-    AppendEnvironmentVariable,
+    ExecuteProcess,
     IncludeLaunchDescription,
     RegisterEventHandler,
     SetEnvironmentVariable,
@@ -52,7 +52,6 @@ def generate_launch_description():
         name="GZ_FILE_PATH", value=resource_path_str
     )
 
-    # Use the verified dm_room.sdf
     world_file = os.path.join(tiago_bringup_pkg, "urdf", "dm_room.sdf")
     robot_file = os.path.join(tiago_bringup_pkg, "urdf", "tiago_autonomy.urdf")
     rviz_config = os.path.join(tiago_bringup_pkg, "rviz2", "rviz_config.rviz")
@@ -76,6 +75,7 @@ def generate_launch_description():
         output="screen",
     )
 
+    # Spawn centered on Shelf 2 (x = 1.75) in the open aisle (y = 0.05, ~1.23 m from shelf front)
     spawn_robot = Node(
         package="ros_gz_sim",
         executable="create",
@@ -87,13 +87,13 @@ def generate_launch_description():
             "-string",
             robot_description,
             "-x",
-            "1.9",
+            "1.75",
             "-y",
-            "-0.6",
+            "0.05",
             "-z",
             "0.05",
             "-Y",
-            "-1.57"
+            "-1.5708",
         ],
         output="screen",
     )
@@ -116,9 +116,7 @@ def generate_launch_description():
             "/head_front_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image",
             "/head_front_camera/depth_camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
         ],
-        parameters=[
-            {"use_sim_time": True},
-        ],
+        parameters=[{"use_sim_time": True}],
         output="screen",
     )
 
@@ -156,6 +154,37 @@ def generate_launch_description():
         output="screen",
     )
 
+    # Automatically move torso & arms into an in-front-of-chest ready posture right after controllers load
+    ready_pose_torso = ExecuteProcess(
+        cmd=[
+            "ros2", "topic", "pub", "--once",
+            "/torso_controller/joint_trajectory",
+            "trajectory_msgs/msg/JointTrajectory",
+            "{joint_names: ['torso_lift_joint'], points: [{positions: [0.28], time_from_start: {sec: 2, nanosec: 0}}]}",
+        ],
+        output="screen",
+    )
+
+    ready_pose_left = ExecuteProcess(
+        cmd=[
+            "ros2", "topic", "pub", "--once",
+            "/arm_left_controller/joint_trajectory",
+            "trajectory_msgs/msg/JointTrajectory",
+            "{joint_names: ['arm_left_1_joint','arm_left_2_joint','arm_left_3_joint','arm_left_4_joint','arm_left_5_joint','arm_left_6_joint','arm_left_7_joint'], points: [{positions: [0.35, -0.55, -0.35, 1.65, -1.57, 0.15, 0.0], time_from_start: {sec: 2, nanosec: 500000000}}]}",
+        ],
+        output="screen",
+    )
+
+    ready_pose_right = ExecuteProcess(
+        cmd=[
+            "ros2", "topic", "pub", "--once",
+            "/arm_right_controller/joint_trajectory",
+            "trajectory_msgs/msg/JointTrajectory",
+            "{joint_names: ['arm_right_1_joint','arm_right_2_joint','arm_right_3_joint','arm_right_4_joint','arm_right_5_joint','arm_right_6_joint','arm_right_7_joint'], points: [{positions: [-0.35, -0.55, 0.35, 1.65, 1.57, 0.15, 0.0], time_from_start: {sec: 2, nanosec: 500000000}}]}",
+        ],
+        output="screen",
+    )
+
     delay_joint_state_broadcaster = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=spawn_robot,
@@ -172,6 +201,18 @@ def generate_launch_description():
         event_handler=OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
             on_exit=[spawn_motion_controllers],
+        )
+    )
+
+    delay_ready_pose = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=spawn_motion_controllers,
+            on_exit=[
+                TimerAction(
+                    period=1.0,
+                    actions=[ready_pose_torso, ready_pose_left, ready_pose_right],
+                )
+            ],
         )
     )
 
@@ -193,6 +234,7 @@ def generate_launch_description():
             gz_bridge,
             delay_joint_state_broadcaster,
             delay_motion_controllers,
-            #rviz_node,
+            delay_ready_pose,
+            # rviz_node,
         ]
     )

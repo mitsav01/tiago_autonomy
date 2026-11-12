@@ -1,0 +1,16 @@
+tiago_dual_wbc_controller:
+  ros__parameters:
+    control_rate_hz: 100.0
+    left_ee_frame: "gripper_left_grasping_frame"
+    right_ee_frame: "gripper_right_grasping_frame"
+    kp_linear: 5.0
+    kp_angular: 1.5
+    k_null: 0.4
+    base_standoff_x: 0.70
+    start_enabled: false
+    # Task weights: [lx, ly, lz, lrx, lry, lrz, rx, ry, rz, rrx, rry, rrz]
+    w_task: [150.0, 150.0, 150.0, 25.0, 25.0, 25.0, 150.0, 150.0, 150.0, 25.0, 25.0, 25.0]
+    # Regularization weights: [vx, wz, torso, left_1..7, right_1..7]
+    w_reg: [2.5, 2.5, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+    # Velocity limits: [vx, wz, torso, left_1..7, right_1..7]
+    dq_max: [0.4, 0.8, 0.07, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
