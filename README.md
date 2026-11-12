@@ -14,11 +14,15 @@ A ROS 2 robotics portfolio project focused on autonomous navigation, motion plan
 ## Demonstration
 
 <p align="center">
-  <a href="media/tiago_autonomy_demo.mp4">
-    <img src="media/tiago_autonomy_demo_thumbnail.png"
-         alt="TIAGo autonomous mobile manipulation demonstration"
-         width="850">
-  </a>
+  <video
+    src="media/tiago_autonomy_demo.mp4"
+    autoplay
+    loop
+    muted
+    playsinline
+    controls
+    width="850">
+  </video>
 </p>
 
 <p align="center">
